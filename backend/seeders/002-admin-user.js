@@ -42,6 +42,18 @@ module.exports = {
         isActive: true,
         createdAt: new Date(),
         updatedAt: new Date()
+      },
+      {
+        id: uuidv4(),
+        name: 'Staff',
+        email: 'staff@company.com',
+        password: hashedPassword,
+        role: 'user',
+        department: 'IT',
+        position: 'Staff',
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
       }
     ]);
   },

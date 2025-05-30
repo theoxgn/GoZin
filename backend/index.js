@@ -42,3 +42,20 @@ app.use((err, req, res, next) => {
 
 // Set port and start server
 const PORT = process.env.PORT || 5000;
+const startServer = async () => {
+  try {
+    await sequelize.authenticate();
+    console.log('Database connection has been established successfully.');
+    
+    // Database sudah dimigrasi menggunakan sequelize-cli
+    console.log('Database ready');
+    
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Unable to connect to the database:', error);
+  }
+};
+
+startServer();

@@ -1,5 +1,6 @@
 // models/User.js
 const { DataTypes } = require('sequelize');
+const bcrypt = require('bcryptjs');
 
 module.exports = (sequelize) => {
   const User = sequelize.define('User', {
@@ -62,7 +63,7 @@ module.exports = (sequelize) => {
       defaultValue: DataTypes.NOW
     }
   }, {
-    tableName: 'users',
+    tableName: 'Users',
     timestamps: true,
     indexes: [
       {
@@ -78,27 +79,44 @@ module.exports = (sequelize) => {
       {
         fields: ['isActive']
       }
-    ]
+    ],
+    hooks: {
+      beforeCreate: async (user) => {
+        if (user.password) {
+          user.password = await bcrypt.hash(user.password, 10);
+        }
+      },
+      beforeUpdate: async (user) => {
+        if (user.changed('password')) {
+          user.password = await bcrypt.hash(user.password, 10);
+        }
+      }
+    }
   });
+
+  // Instance method to check password
+  User.prototype.checkPassword = async function(password) {
+    return bcrypt.compare(password, this.password);
+  };
 
   // Define associations
   User.associate = (models) => {
     // User dapat memiliki banyak perijinan
     User.hasMany(models.Permission, {
       foreignKey: 'userId',
-      as: 'permissions'
+      as: 'user'
     });
 
     // User sebagai approval dapat approve banyak perijinan
     User.hasMany(models.Permission, {
       foreignKey: 'approvalId',
-      as: 'approvedPermissions'
+      as: 'approval'
     });
 
     // User sebagai HRD dapat approve banyak perijinan
     User.hasMany(models.Permission, {
       foreignKey: 'hrdId',
-      as: 'hrdApprovedPermissions'
+      as: 'hrd'
     });
   };
 

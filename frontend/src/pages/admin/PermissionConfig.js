@@ -57,8 +57,7 @@ function PermissionConfig() {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      
-      const response = await axios.get('/api/admin/permission-config', {
+      const response = await axios.get('/api/admin/permission-configs', {
         headers: { Authorization: `Bearer ${token}` },
       });
       
@@ -154,7 +153,7 @@ function PermissionConfig() {
       const token = localStorage.getItem('token');
       
       await axios.post(
-        '/api/admin/permission-config',
+        '/api/admin/permission-configs',
         currentConfig,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -178,7 +177,7 @@ function PermissionConfig() {
       const token = localStorage.getItem('token');
       
       await axios.put(
-        `/api/admin/permission-config/${currentConfig.id}`,
+        `/api/admin/permission-configs/${currentConfig.id}`,
         currentConfig,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -199,7 +198,7 @@ function PermissionConfig() {
       setProcessing(true);
       const token = localStorage.getItem('token');
       
-      await axios.delete(`/api/admin/permission-config/${currentConfig.id}`, {
+      await axios.delete(`/api/admin/permission-configs/${currentConfig.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       

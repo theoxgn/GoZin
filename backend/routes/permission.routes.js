@@ -3,8 +3,8 @@ const router = express.Router();
 const permissionController = require('../controllers/permission.controller');
 const { verifyToken, isUser, isAdmin, isApprovalOrHRD } = require('../middleware/auth.middleware');
 
-// Route untuk membuat perijinan baru (user)
-router.post('/', verifyToken, isUser, permissionController.createPermission);
+// Route untuk membuat perijinan baru (semua user yang terautentikasi)
+router.post('/', verifyToken, permissionController.createPermission);
 
 // Route untuk mendapatkan semua perijinan (admin, approval, hrd)
 router.get('/', verifyToken, isApprovalOrHRD, permissionController.getAllPermissions);

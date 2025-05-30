@@ -4,15 +4,15 @@ const { DataTypes } = require('sequelize');
 module.exports = (sequelize) => {
   const Permission = sequelize.define('Permission', {
     id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true
     },
     userId: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
-        model: 'users',
+        model: 'Users',
         key: 'id'
       }
     },
@@ -104,7 +104,7 @@ module.exports = (sequelize) => {
       defaultValue: DataTypes.NOW
     }
   }, {
-    tableName: 'permissions',
+    tableName: 'Permissions',
     timestamps: true,
     indexes: [
       {
@@ -157,7 +157,7 @@ module.exports = (sequelize) => {
     // Permission belongs to PermissionConfig
     Permission.belongsTo(models.PermissionConfig, {
       foreignKey: 'type',
-      targetKey: 'type',
+      targetKey: 'permissionType',
       as: 'config'
     });
   };

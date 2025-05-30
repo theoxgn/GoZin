@@ -34,13 +34,13 @@ function ApprovalDashboard() {
         const token = localStorage.getItem('token');
         
         // Fetch pending count
-        const countResponse = await axios.get('/api/approval/pending', {
+        const countResponse = await axios.get('/api/approvals/pending', {
           headers: { Authorization: `Bearer ${token}` },
           params: { count: true }
         });
         
         // Fetch recent pending permissions
-        const recentResponse = await axios.get('/api/approval/pending', {
+        const recentResponse = await axios.get('/api/approvals/pending', {
           headers: { Authorization: `Bearer ${token}` },
           params: { limit: 5, sort: 'createdAt,desc' }
         });
@@ -48,8 +48,8 @@ function ApprovalDashboard() {
         setPendingCount(countResponse.data.count || 0);
         setRecentPending(recentResponse.data.permissions || recentResponse.data);
       } catch (err) {
-        console.error('Error fetching approval dashboard data:', err);
-        setError('Gagal memuat data dashboard approval');
+        console.error('Error fetching approvals dashboard data:', err);
+        setError('Gagal memuat data dashboard approvals');
       } finally {
         setLoading(false);
       }
@@ -89,7 +89,7 @@ function ApprovalDashboard() {
   return (
     <Box className="dashboard-container">
       <Typography variant="h4" component="h1" gutterBottom>
-        Dashboard Approval
+        Dashboard approvals
       </Typography>
       
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
@@ -113,7 +113,7 @@ function ApprovalDashboard() {
                 color="primary"
                 startIcon={<ListAltIcon />}
                 component={Link}
-                to="/approval/pending"
+                to="/approvals/pending"
                 sx={{ mt: 2 }}
               >
                 Lihat Semua Perijinan Pending
@@ -131,7 +131,7 @@ function ApprovalDashboard() {
                 <Button 
                   size="small" 
                   component={Link} 
-                  to="/approval/pending"
+                  to="/approvals/pending"
                 >
                   Lihat Semua
                 </Button>

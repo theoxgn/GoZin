@@ -8,8 +8,8 @@ module.exports = (sequelize) => {
       primaryKey: true,
       autoIncrement: true
     },
-    type: {
-      type: DataTypes.STRING(50),
+    permissionType: {
+      type: DataTypes.ENUM('short_leave', 'cuti', 'visit', 'dinas'),
       allowNull: false,
       unique: true,
       validate: {
@@ -26,22 +26,22 @@ module.exports = (sequelize) => {
         len: [2, 100]
       }
     },
-    maxDuration: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 1,
-      validate: {
-        min: 1,
-        max: 365
-      }
-    },
     maxPerMonth: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      defaultValue: 5,
+      defaultValue: 2,
       validate: {
         min: 1,
         max: 31
+      }
+    },
+    maxDurationDays: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 12,
+      validate: {
+        min: 1,
+        max: 365
       }
     },
     description: {
@@ -64,12 +64,12 @@ module.exports = (sequelize) => {
       defaultValue: DataTypes.NOW
     }
   }, {
-    tableName: 'permission_configs',
+    tableName: 'PermissionConfigs',
     timestamps: true,
     indexes: [
       {
         unique: true,
-        fields: ['type']
+        fields: ['permissionType']
       },
       {
         fields: ['isActive']

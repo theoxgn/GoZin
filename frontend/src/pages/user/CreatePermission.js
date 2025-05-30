@@ -61,7 +61,7 @@ function CreatePermission() {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/admin/permission-config', {
+      const response = await axios.get('/api/admin/permission-configs', {
         headers: { Authorization: `Bearer ${token}` },
       });
       console.log('Permission configs loaded:', response.data); // Debug log

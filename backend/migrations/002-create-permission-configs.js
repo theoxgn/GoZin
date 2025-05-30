@@ -14,6 +14,10 @@ module.exports = {
         allowNull: false,
         unique: true
       },
+      label: {
+        type: Sequelize.STRING(100),
+        allowNull: false
+      },
       maxPerMonth: {
         type: Sequelize.INTEGER,
         allowNull: false,
@@ -27,6 +31,11 @@ module.exports = {
       description: {
         type: Sequelize.TEXT,
         allowNull: true
+      },
+      isActive: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: true
       },
       createdAt: {
         type: Sequelize.DATE,

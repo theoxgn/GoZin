@@ -151,12 +151,12 @@ exports.getAllPermissions = async (req, res) => {
         },
         {
           model: User,
-          as: 'approver',
+          as: 'approval',
           attributes: ['id', 'name', 'email']
         },
         {
           model: User,
-          as: 'hrdApprover',
+          as: 'hrd',
           attributes: ['id', 'name', 'email']
         }
       ],
@@ -186,12 +186,12 @@ exports.getPermissionById = async (req, res) => {
         },
         {
           model: User,
-          as: 'approver',
+          as: 'approval',
           attributes: ['id', 'name', 'email']
         },
         {
           model: User,
-          as: 'hrdApprover',
+          as: 'hrd',
           attributes: ['id', 'name', 'email']
         }
       ]

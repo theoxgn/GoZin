@@ -33,13 +33,11 @@ exports.getPendingPermissions = async (req, res) => {
     
     const permissions = await Permission.findAll({
       where: whereCondition,
-      include: [
-        {
-          model: User,
-          as: 'user',
-          attributes: ['id', 'name', 'email', 'department', 'position']
-        }
-      ],
+      include: [{
+        model: User,
+        as: 'user',
+        attributes: ['id', 'name', 'email', 'department', 'position']
+      }],
       order: [['createdAt', 'ASC']]
     });
     
@@ -48,6 +46,7 @@ exports.getPendingPermissions = async (req, res) => {
       permissions
     });
   } catch (error) {
+    console.error('Error in getPendingPermissions:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -62,13 +61,11 @@ exports.approvePermission = async (req, res) => {
     const approvalId = req.userId;
     
     const permission = await Permission.findByPk(id, {
-      include: [
-        {
-          model: User,
-          as: 'user',
-          attributes: ['id', 'name', 'email']
-        }
-      ]
+      include: [{
+        model: User,
+        as: 'user',
+        attributes: ['id', 'name', 'email']
+      }]
     });
     
     if (!permission) {
@@ -95,6 +92,7 @@ exports.approvePermission = async (req, res) => {
       permission
     });
   } catch (error) {
+    console.error('Error in approvePermission:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -115,13 +113,11 @@ exports.rejectPermission = async (req, res) => {
     }
     
     const permission = await Permission.findByPk(id, {
-      include: [
-        {
-          model: User,
-          as: 'user',
-          attributes: ['id', 'name', 'email']
-        }
-      ]
+      include: [{
+        model: User,
+        as: 'user',
+        attributes: ['id', 'name', 'email']
+      }]
     });
     
     if (!permission) {
@@ -148,6 +144,7 @@ exports.rejectPermission = async (req, res) => {
       permission
     });
   } catch (error) {
+    console.error('Error in rejectPermission:', error);
     res.status(500).json({ message: error.message });
   }
 };
