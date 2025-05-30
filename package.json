@@ -1,0 +1,23 @@
+{
+  "name": "permission-system",
+  "version": "1.0.0",
+  "description": "Sistem Perizinan Karyawan",
+  "main": "index.js",
+  "scripts": {
+    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd backend && npm start",
+    "client": "cd frontend && npm start",
+    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "seed": "cd backend && node seeders/init.js"
+  },
+  "keywords": [
+    "permission",
+    "employee",
+    "management"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "concurrently": "^8.2.0"
+  }
+}
