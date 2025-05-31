@@ -1,7 +1,8 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
-import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
+import { CssBaseline, ThemeProvider } from '@mui/material';
+import theme from './theme';
 
 // Layouts
 import MainLayout from './layouts/MainLayout';
@@ -14,7 +15,7 @@ import Register from './pages/auth/Register';
 import UserDashboard from './pages/user/Dashboard';
 import UserPermissions from './pages/user/Permissions';
 import CreatePermission from './pages/user/CreatePermission';
-import PermissionDetails from './pages/user/PermissionDetails';
+import PermissionDetail from './pages/user/PermissionDetail';
 import Profile from './pages/user/Profile';
 import ChangePassword from './pages/user/ChangePassword';
 
@@ -31,25 +32,26 @@ import AdminDashboard from './pages/admin/Dashboard';
 import UserManagement from './pages/admin/UserManagement';
 import PermissionConfig from './pages/admin/PermissionConfig';
 
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#f50057',
-    },
-    background: {
-      default: '#f5f5f5',
-    },
-  },
-});
-
 function App() {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '100vh',
+          flexDirection: 'column',
+          gap: '16px'
+        }}>
+          <div className="loading-spinner"></div>
+          <p>Memuat aplikasi...</p>
+        </div>
+      </ThemeProvider>
+    );
   }
 
   return (
@@ -66,7 +68,7 @@ function App() {
           <Route index element={<UserDashboard />} />
           <Route path="permissions" element={<UserPermissions />} />
           <Route path="permissions/create" element={<CreatePermission />} />
-          <Route path="permissions/:id" element={<PermissionDetails />} />
+          <Route path="permissions/:id" element={<PermissionDetail />} />
           <Route path="profile" element={<Profile />} />
           <Route path="change-password" element={<ChangePassword />} />
 

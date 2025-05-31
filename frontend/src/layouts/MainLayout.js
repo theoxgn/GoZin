@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Outlet, useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import {
   AppBar,
@@ -20,7 +20,12 @@ import {
   Menu,
   MenuItem,
   Avatar,
+  useMediaQuery,
+  Tooltip,
+  Badge,
+  Fade,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import {
   Menu as MenuIcon,
   Dashboard as DashboardIcon,
@@ -34,18 +39,37 @@ import {
   Group as GroupIcon,
   Logout as LogoutIcon,
   VpnKey as VpnKeyIcon,
+  Notifications as NotificationsIcon,
+  ChevronLeft as ChevronLeftIcon,
 } from '@mui/icons-material';
 
-const drawerWidth = 240;
+const drawerWidth = 260;
 
 function MainLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
+  const [notificationAnchorEl, setNotificationAnchorEl] = useState(null);
+  const [miniDrawer, setMiniDrawer] = useState(false);
+
+  // Close mobile drawer when route changes
+  useEffect(() => {
+    if (mobileOpen) {
+      setMobileOpen(false);
+    }
+  }, [location.pathname]);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
+  };
+
+  const handleMiniDrawer = () => {
+    setMiniDrawer(!miniDrawer);
   };
 
   const handleProfileMenuOpen = (event) => {
@@ -54,6 +78,14 @@ function MainLayout() {
 
   const handleProfileMenuClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleNotificationMenuOpen = (event) => {
+    setNotificationAnchorEl(event.currentTarget);
+  };
+
+  const handleNotificationMenuClose = () => {
+    setNotificationAnchorEl(null);
   };
 
   const handleLogout = () => {
@@ -72,6 +104,17 @@ function MainLayout() {
   const getUserInitials = () => {
     const displayName = getUserDisplayName();
     return displayName.charAt(0).toUpperCase();
+  };
+
+  // Helper function to check if a menu item is active
+  const isMenuItemActive = (path) => {
+    if (path === '/' && location.pathname === '/') {
+      return true;
+    }
+    if (path !== '/' && location.pathname.startsWith(path)) {
+      return true;
+    }
+    return false;
   };
 
   const menuItems = [
@@ -105,22 +148,52 @@ function MainLayout() {
 
   const drawer = (
     <div>
-      <Toolbar>
-        <Typography variant="h6" noWrap component="div">
-          Sistem Perijinan
-        </Typography>
+      <Toolbar sx={{ 
+        display: 'flex', 
+        justifyContent: miniDrawer ? 'center' : 'space-between',
+        px: miniDrawer ? 1 : 2,
+        py: 1.5,
+      }}>
+        {!miniDrawer && (
+          <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 700 }}>
+            Sistem Perijinan
+          </Typography>
+        )}
+        {!isMobile && (
+          <IconButton onClick={handleMiniDrawer} size="small" sx={{ ml: miniDrawer ? 0 : 'auto' }}>
+            <ChevronLeftIcon />
+          </IconButton>
+        )}
       </Toolbar>
       <Divider />
-      <List>
+      <List sx={{ px: miniDrawer ? 1 : 2, py: 1 }}>
         {menuItems.map((item, index) => (
           item.divider ? (
-            <Divider key={`divider-${index}`} />
+            <Divider key={`divider-${index}`} sx={{ my: 1.5 }} />
           ) : (
-            <ListItem key={item.text} disablePadding>
-              <ListItemButton component={Link} to={item.path} onClick={() => setMobileOpen(false)}>
-                <ListItemIcon>{item.icon}</ListItemIcon>
-                <ListItemText primary={item.text} />
-              </ListItemButton>
+            <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
+              <Tooltip title={miniDrawer ? item.text : ''} placement="right" arrow>
+                <ListItemButton 
+                  component={Link} 
+                  to={item.path} 
+                  onClick={() => isMobile && setMobileOpen(false)}
+                  selected={isMenuItemActive(item.path)}
+                  sx={{
+                    borderRadius: '10px',
+                    minHeight: '48px',
+                    justifyContent: miniDrawer ? 'center' : 'flex-start',
+                  }}
+                >
+                  <ListItemIcon sx={{ 
+                    minWidth: miniDrawer ? 0 : 40, 
+                    mr: miniDrawer ? 0 : 2,
+                    justifyContent: 'center',
+                  }}>
+                    {item.icon}
+                  </ListItemIcon>
+                  {!miniDrawer && <ListItemText primary={item.text} />}
+                </ListItemButton>
+              </Tooltip>
             </ListItem>
           )
         ))}
@@ -133,42 +206,73 @@ function MainLayout() {
       <CssBaseline />
       <AppBar
         position="fixed"
+        elevation={0}
         sx={{
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          ml: { sm: `${drawerWidth}px` },
+          width: { 
+            xs: '100%',
+            md: miniDrawer ? `calc(100% - ${theme.spacing(9)})` : `calc(100% - ${drawerWidth}px)` 
+          },
+          ml: { 
+            xs: 0,
+            md: miniDrawer ? theme.spacing(9) : drawerWidth 
+          },
+          bgcolor: 'background.paper',
+          color: 'text.primary',
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 0, // Hilangkan rounded corners pada AppBar
+          // Override semua rounded corners yang mungkin diterapkan oleh MUI
+          '& .MuiToolbar-root': {
+            borderRadius: 0,
+          },
         }}
       >
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: 'none' } }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            Sistem Perijinan Karyawan
-          </Typography>
+        <Toolbar sx={{ 
+          justifyContent: 'space-between',
+          borderRadius: 0, // Hilangkan rounded corners pada Toolbar
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <IconButton
+              color="inherit"
+              aria-label="open drawer"
+              edge="start"
+              onClick={handleDrawerToggle}
+              sx={{ mr: 2, display: { md: 'none' } }}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Typography 
+              variant="h6" 
+              noWrap 
+              component="div" 
+              sx={{ 
+                display: { xs: 'none', sm: 'block' },
+                fontWeight: 600,
+              }}
+            >
+              Sistem Perijinan Karyawan
+            </Typography>
+          </Box>
           
           {user && (
-            <>
-              <Button 
-                color="inherit" 
-                onClick={handleProfileMenuOpen} 
-                startIcon={
-                  <Avatar sx={{ width: 24, height: 24 }}>
-                    {getUserInitials()}
-                  </Avatar>
-                }
-              >
-                {getUserDisplayName()}
-              </Button>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Tooltip title="Notifikasi">
+                <IconButton 
+                  color="inherit" 
+                  sx={{ mr: 1 }}
+                  onClick={handleNotificationMenuOpen}
+                >
+                  <Badge badgeContent={3} color="error">
+                    <NotificationsIcon />
+                  </Badge>
+                </IconButton>
+              </Tooltip>
+              
               <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleProfileMenuClose}
+                anchorEl={notificationAnchorEl}
+                open={Boolean(notificationAnchorEl)}
+                onClose={handleNotificationMenuClose}
+                TransitionComponent={Fade}
                 anchorOrigin={{
                   vertical: 'bottom',
                   horizontal: 'right',
@@ -177,34 +281,120 @@ function MainLayout() {
                   vertical: 'top',
                   horizontal: 'right',
                 }}
+                PaperProps={{
+                  elevation: 3,
+                  sx: { 
+                    mt: 1.5, 
+                    width: 320,
+                    borderRadius: 2,
+                    overflow: 'hidden',
+                  }
+                }}
               >
-                <MenuItem component={Link} to="/profile" onClick={handleProfileMenuClose}>
+                <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
+                  <Typography variant="subtitle1" fontWeight={600}>Notifikasi</Typography>
+                </Box>
+                <MenuItem onClick={handleNotificationMenuClose} sx={{ py: 2 }}>
+                  <Box>
+                    <Typography variant="body2" fontWeight={500}>Perijinan Anda telah disetujui</Typography>
+                    <Typography variant="caption" color="text.secondary">2 jam yang lalu</Typography>
+                  </Box>
+                </MenuItem>
+                <MenuItem onClick={handleNotificationMenuClose} sx={{ py: 2 }}>
+                  <Box>
+                    <Typography variant="body2" fontWeight={500}>Ada perijinan baru yang perlu disetujui</Typography>
+                    <Typography variant="caption" color="text.secondary">5 jam yang lalu</Typography>
+                  </Box>
+                </MenuItem>
+                <MenuItem onClick={handleNotificationMenuClose} sx={{ py: 2 }}>
+                  <Box>
+                    <Typography variant="body2" fontWeight={500}>Pengingat: Perijinan Anda akan berakhir besok</Typography>
+                    <Typography variant="caption" color="text.secondary">1 hari yang lalu</Typography>
+                  </Box>
+                </MenuItem>
+                <Box sx={{ p: 1.5, borderTop: '1px solid', borderColor: 'divider', textAlign: 'center' }}>
+                  <Typography variant="body2" color="primary" sx={{ cursor: 'pointer', fontWeight: 500 }}>
+                    Lihat Semua Notifikasi
+                  </Typography>
+                </Box>
+              </Menu>
+              
+              <Button 
+                color="inherit" 
+                onClick={handleProfileMenuOpen} 
+                startIcon={
+                  <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
+                    {getUserInitials()}
+                  </Avatar>
+                }
+                endIcon={null}
+                sx={{ 
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  ml: 1,
+                  '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.04)' },
+                }}
+              >
+                <Box sx={{ display: { xs: 'none', sm: 'block' }, ml: 1, textAlign: 'left' }}>
+                  <Typography variant="body2" fontWeight={600} lineHeight={1.2}>
+                    {getUserDisplayName()}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" lineHeight={1}>
+                    {user.role === 'admin' ? 'Administrator' : 
+                     user.role === 'approval' ? 'Approval' : 
+                     user.role === 'hrd' ? 'HRD' : 'Karyawan'}
+                  </Typography>
+                </Box>
+              </Button>
+              
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleProfileMenuClose}
+                TransitionComponent={Fade}
+                anchorOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'right',
+                }}
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+                PaperProps={{
+                  elevation: 3,
+                  sx: { mt: 1.5, borderRadius: 2 }
+                }}
+              >
+                <MenuItem component={Link} to="/profile" onClick={handleProfileMenuClose} sx={{ py: 1.5 }}>
                   <ListItemIcon>
                     <PersonIcon fontSize="small" />
                   </ListItemIcon>
-                  <ListItemText>Profil</ListItemText>
+                  <ListItemText primary="Profil" />
                 </MenuItem>
-                <MenuItem component={Link} to="/change-password" onClick={handleProfileMenuClose}>
+                <MenuItem component={Link} to="/change-password" onClick={handleProfileMenuClose} sx={{ py: 1.5 }}>
                   <ListItemIcon>
                     <VpnKeyIcon fontSize="small" />
                   </ListItemIcon>
-                  <ListItemText>Ubah Password</ListItemText>
+                  <ListItemText primary="Ubah Password" />
                 </MenuItem>
                 <Divider />
-                <MenuItem onClick={handleLogout}>
+                <MenuItem onClick={handleLogout} sx={{ py: 1.5 }}>
                   <ListItemIcon>
-                    <LogoutIcon fontSize="small" />
+                    <LogoutIcon fontSize="small" color="error" />
                   </ListItemIcon>
-                  <ListItemText>Logout</ListItemText>
+                  <ListItemText primary="Logout" sx={{ color: 'error.main' }} />
                 </MenuItem>
               </Menu>
-            </>
+            </Box>
           )}
         </Toolbar>
       </AppBar>
       <Box
         component="nav"
-        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+        sx={{ 
+          width: { md: miniDrawer ? theme.spacing(9) : drawerWidth }, 
+          flexShrink: { md: 0 } 
+        }}
       >
         <Drawer
           variant="temporary"
@@ -214,8 +404,12 @@ function MainLayout() {
             keepMounted: true, // Better open performance on mobile.
           }}
           sx={{
-            display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            display: { xs: 'block', md: 'none' },
+            '& .MuiDrawer-paper': { 
+              boxSizing: 'border-box', 
+              width: drawerWidth,
+              borderRight: 'none',
+            },
           }}
         >
           {drawer}
@@ -223,8 +417,17 @@ function MainLayout() {
         <Drawer
           variant="permanent"
           sx={{
-            display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            display: { xs: 'none', md: 'block' },
+            '& .MuiDrawer-paper': { 
+              boxSizing: 'border-box', 
+              width: miniDrawer ? theme.spacing(9) : drawerWidth,
+              borderRight: 'none',
+              transition: theme.transitions.create('width', {
+                easing: theme.transitions.easing.sharp,
+                duration: theme.transitions.duration.enteringScreen,
+              }),
+              overflowX: 'hidden',
+            },
           }}
           open
         >
@@ -233,10 +436,21 @@ function MainLayout() {
       </Box>
       <Box
         component="main"
-        sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${drawerWidth}px)` } }}
+        sx={{ 
+          flexGrow: 1, 
+          p: { xs: 2, sm: 3 }, 
+          width: { 
+            xs: '100%',
+            md: miniDrawer ? `calc(100% - ${theme.spacing(9)})` : `calc(100% - ${drawerWidth}px)` 
+          },
+          transition: theme.transitions.create(['width', 'margin'], {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.enteringScreen,
+          }),
+        }}
       >
         <Toolbar />
-        <Container maxWidth="lg">
+        <Container maxWidth="xl">
           <Outlet />
         </Container>
       </Box>

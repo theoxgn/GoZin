@@ -7,166 +7,200 @@ import {
   Card,
   CardContent,
   CardHeader,
-  CircularProgress,
   Divider,
-  FormControl,
-  FormHelperText,
   Grid,
-  InputLabel,
-  MenuItem,
-  Select,
   TextField,
   Typography,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Select,
+  FormHelperText,
   Alert,
+  Snackbar,
+  CircularProgress,
+  Paper,
+  Stepper,
+  Step,
+  StepLabel,
+  IconButton,
+  InputAdornment,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import idLocale from 'date-fns/locale/id';
-import { differenceInDays, addDays } from 'date-fns';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { id } from 'date-fns/locale';
+import { format, isAfter, isBefore, addDays } from 'date-fns';
+import {
+  Save as SaveIcon,
+  ArrowBack as ArrowBackIcon,
+  ArrowForward as ArrowForwardIcon,
+  CalendarToday as CalendarTodayIcon,
+  AccessTime as AccessTimeIcon,
+  Description as DescriptionIcon,
+  Category as CategoryIcon,
+  Check as CheckIcon,
+} from '@mui/icons-material';
 
 function CreatePermission() {
   const navigate = useNavigate();
+  const [activeStep, setActiveStep] = useState(0);
+  const [permissionTypes, setPermissionTypes] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  
   const [formData, setFormData] = useState({
     type: '',
     startDate: null,
     endDate: null,
+    startTime: null,
+    endTime: null,
     reason: '',
   });
-  const [loading, setLoading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
-  const [permissionConfigs, setPermissionConfigs] = useState([]);
-  const [selectedConfig, setSelectedConfig] = useState(null);
+  
+  const [formErrors, setFormErrors] = useState({
+    type: '',
+    startDate: '',
+    endDate: '',
+    startTime: '',
+    endTime: '',
+    reason: '',
+  });
 
   useEffect(() => {
-    fetchPermissionConfigs();
+    fetchPermissionTypes();
   }, []);
 
-  useEffect(() => {
-    if (formData.type && permissionConfigs.length > 0) {
-      const config = permissionConfigs.find(c => c.type === formData.type);
-      setSelectedConfig(config);
-      
-      // Auto-set end date based on start date and max duration
-      if (formData.startDate && config) {
-        const maxDays = config.maxDuration;
-        const newEndDate = addDays(new Date(formData.startDate), maxDays - 1);
-        setFormData(prev => ({ ...prev, endDate: newEndDate }));
-      }
-    }
-  }, [formData.type, formData.startDate, permissionConfigs]);
-
-  const fetchPermissionConfigs = async () => {
+  const fetchPermissionTypes = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/admin/permission-configs', {
+      const response = await axios.get('/api/permission-types', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      console.log('Permission configs loaded:', response.data); // Debug log
-      setPermissionConfigs(response.data);
+      setPermissionTypes(response.data);
     } catch (err) {
-      console.error('Error fetching permission configs:', err);
-      setError('Gagal memuat konfigurasi perijinan');
-      // Fallback data jika API gagal
-      setPermissionConfigs([
-        { type: 'short_leave', label: 'Izin Keluar', maxDuration: 1, description: 'Izin keluar sementara' },
-        { type: 'cuti', label: 'Cuti', maxDuration: 30, description: 'Cuti tahunan' },
-        { type: 'visit', label: 'Kunjungan', maxDuration: 1, description: 'Kunjungan dinas' },
-        { type: 'dinas', label: 'Dinas', maxDuration: 7, description: 'Perjalanan dinas' }
-      ]);
+      console.error('Error fetching permission types:', err);
+      setError('Gagal memuat tipe perijinan');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  const handleChange = (field, value) => {
     setFormData({
       ...formData,
-      [name]: value,
+      [field]: value,
     });
-  };
-
-  const handleDateChange = (field, date) => {
-    setFormData({
-      ...formData,
-      [field]: date,
-    });
+    
+    // Clear error when field is changed
+    if (formErrors[field]) {
+      setFormErrors({
+        ...formErrors,
+        [field]: '',
+      });
+    }
   };
 
   const validateForm = () => {
+    const errors = {};
+    let isValid = true;
+
     if (!formData.type) {
-      setError('Tipe perijinan harus dipilih');
-      return false;
+      errors.type = 'Tipe perijinan harus dipilih';
+      isValid = false;
     }
+
     if (!formData.startDate) {
-      setError('Tanggal mulai harus diisi');
-      return false;
+      errors.startDate = 'Tanggal mulai harus diisi';
+      isValid = false;
     }
+
     if (!formData.endDate) {
-      setError('Tanggal selesai harus diisi');
-      return false;
+      errors.endDate = 'Tanggal selesai harus diisi';
+      isValid = false;
+    } else if (formData.startDate && isAfter(formData.startDate, formData.endDate)) {
+      errors.endDate = 'Tanggal selesai harus setelah tanggal mulai';
+      isValid = false;
     }
-    if (!formData.reason) {
-      setError('Alasan harus diisi');
-      return false;
-    }
-
-    // Check if end date is after start date
-    if (new Date(formData.endDate) < new Date(formData.startDate)) {
-      setError('Tanggal selesai harus setelah tanggal mulai');
-      return false;
-    }
-
-    // Check max duration if config is available
-    if (selectedConfig) {
-      const duration = differenceInDays(
-        new Date(formData.endDate),
-        new Date(formData.startDate)
-      ) + 1; // Include both start and end days
+    
+    // Validate time if permission type is short_leave
+    if (formData.type === 'short_leave') {
+      if (!formData.startTime) {
+        errors.startTime = 'Waktu mulai harus diisi';
+        isValid = false;
+      }
       
-      if (duration > selectedConfig.maxDuration) {
-        setError(`Durasi maksimal untuk ${getPermissionTypeLabel(formData.type)} adalah ${selectedConfig.maxDuration} hari`);
-        return false;
+      if (!formData.endTime) {
+        errors.endTime = 'Waktu selesai harus diisi';
+        isValid = false;
+      } else if (formData.startTime && formData.endTime && 
+                formData.startDate && formData.endDate && 
+                formData.startDate.getTime() === formData.endDate.getTime() && 
+                formData.startTime.getTime() >= formData.endTime.getTime()) {
+        errors.endTime = 'Waktu selesai harus setelah waktu mulai';
+        isValid = false;
       }
     }
 
-    return true;
+    if (!formData.reason || formData.reason.trim() === '') {
+      errors.reason = 'Alasan harus diisi';
+      isValid = false;
+    } else if (formData.reason.length < 10) {
+      errors.reason = 'Alasan minimal 10 karakter';
+      isValid = false;
+    }
+
+    setFormErrors(errors);
+    return isValid;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-
+    
     if (!validateForm()) {
       return;
     }
-
+    
     try {
-      setSubmitting(true);
+      setSubmitLoading(true);
+      setError('');
+      
       const token = localStorage.getItem('token');
       
-      // Format dates to ISO string (YYYY-MM-DD)
-      const formattedData = {
-        ...formData,
-        startDate: formData.startDate.toISOString().split('T')[0],
-        endDate: formData.endDate.toISOString().split('T')[0],
+      // Format data for API
+      const permissionData = {
+        type: formData.type,
+        startDate: format(formData.startDate, 'yyyy-MM-dd'),
+        endDate: format(formData.endDate, 'yyyy-MM-dd'),
+        reason: formData.reason,
       };
       
-      const response = await axios.post('/api/permissions', formattedData, {
+      // Add time for short_leave type
+      if (formData.type === 'short_leave' && formData.startTime && formData.endTime) {
+        permissionData.startTime = format(formData.startTime, 'HH:mm');
+        permissionData.endTime = format(formData.endTime, 'HH:mm');
+      }
+      
+      await axios.post('/api/permissions', permissionData, {
         headers: { Authorization: `Bearer ${token}` },
       });
       
-      // Redirect to permission details page
-      navigate(`/permissions/${response.data.id}`);
+      setSuccess(true);
+      
+      // Redirect after 2 seconds
+      setTimeout(() => {
+        navigate('/permissions');
+      }, 2000);
+      
     } catch (err) {
       console.error('Error creating permission:', err);
-      const errorMessage = err.response?.data?.message || 'Gagal membuat perijinan. Silakan coba lagi.';
-      setError(errorMessage);
+      setError(err.response?.data?.message || 'Gagal membuat perijinan');
     } finally {
-      setSubmitting(false);
+      setSubmitLoading(false);
     }
   };
 
@@ -184,129 +218,399 @@ function CreatePermission() {
         return type;
     }
   };
+  
+  const handleNext = () => {
+    if (activeStep === 0) {
+      // Validate first step
+      const errors = {};
+      let isValid = true;
+      
+      if (!formData.type) {
+        errors.type = 'Tipe perijinan harus dipilih';
+        isValid = false;
+      }
+      
+      setFormErrors({...formErrors, ...errors});
+      
+      if (!isValid) return;
+    } else if (activeStep === 1) {
+      // Validate second step
+      const errors = {};
+      let isValid = true;
+      
+      if (!formData.startDate) {
+        errors.startDate = 'Tanggal mulai harus diisi';
+        isValid = false;
+      }
+
+      if (!formData.endDate) {
+        errors.endDate = 'Tanggal selesai harus diisi';
+        isValid = false;
+      } else if (formData.startDate && isAfter(formData.startDate, formData.endDate)) {
+        errors.endDate = 'Tanggal selesai harus setelah tanggal mulai';
+        isValid = false;
+      }
+      
+      // Validate time if permission type is short_leave
+      if (formData.type === 'short_leave') {
+        if (!formData.startTime) {
+          errors.startTime = 'Waktu mulai harus diisi';
+          isValid = false;
+        }
+        
+        if (!formData.endTime) {
+          errors.endTime = 'Waktu selesai harus diisi';
+          isValid = false;
+        } else if (formData.startTime && formData.endTime && 
+                  formData.startDate && formData.endDate && 
+                  formData.startDate.getTime() === formData.endDate.getTime() && 
+                  formData.startTime.getTime() >= formData.endTime.getTime()) {
+          errors.endTime = 'Waktu selesai harus setelah waktu mulai';
+          isValid = false;
+        }
+      }
+      
+      setFormErrors({...formErrors, ...errors});
+      
+      if (!isValid) return;
+    }
+    
+    setActiveStep((prevActiveStep) => prevActiveStep + 1);
+  };
+
+  const handleBack = () => {
+    setActiveStep((prevActiveStep) => prevActiveStep - 1);
+  };
+  
+  const steps = ['Pilih Tipe Perijinan', 'Tentukan Waktu', 'Berikan Alasan'];
+  
+  const renderStepContent = (step) => {
+    switch (step) {
+      case 0:
+        return (
+          <Box sx={{ mt: 3 }}>
+            <FormControl fullWidth error={!!formErrors.type}>
+              <InputLabel id="permission-type-label">Tipe Perijinan</InputLabel>
+              <Select
+                labelId="permission-type-label"
+                value={formData.type}
+                onChange={(e) => handleChange('type', e.target.value)}
+                label="Tipe Perijinan"
+                startAdornment={
+                  <InputAdornment position="start">
+                    <CategoryIcon color="action" />
+                  </InputAdornment>
+                }
+              >
+                {permissionTypes.map((type) => (
+                  <MenuItem key={type.id || type.code} value={type.code}>
+                    {type.name || getPermissionTypeLabel(type.code)}
+                  </MenuItem>
+                ))}
+              </Select>
+              {formErrors.type && <FormHelperText>{formErrors.type}</FormHelperText>}
+            </FormControl>
+            
+            {formData.type && (
+              <Box sx={{ mt: 3, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
+                <Typography variant="subtitle1" gutterBottom>
+                  Informasi Tipe Perijinan
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {formData.type === 'short_leave' && 'Izin keluar digunakan untuk keperluan keluar kantor dalam waktu singkat dan kembali pada hari yang sama.'}
+                  {formData.type === 'cuti' && 'Cuti digunakan untuk keperluan tidak masuk kerja dalam jangka waktu tertentu.'}
+                  {formData.type === 'visit' && 'Kunjungan digunakan untuk keperluan mengunjungi lokasi atau instansi lain.'}
+                  {formData.type === 'dinas' && 'Dinas digunakan untuk keperluan tugas dinas ke lokasi lain.'}
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        );
+      case 1:
+        return (
+          <Box sx={{ mt: 3 }}>
+            <Grid container spacing={3}>
+              <Grid item xs={12} sm={6}>
+                <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={id}>
+                  <DatePicker
+                    label="Tanggal Mulai"
+                    value={formData.startDate}
+                    onChange={(date) => handleChange('startDate', date)}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        error: !!formErrors.startDate,
+                        helperText: formErrors.startDate,
+                        InputProps: {
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <CalendarTodayIcon color="action" />
+                            </InputAdornment>
+                          ),
+                        },
+                      },
+                    }}
+                  />
+                </LocalizationProvider>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={id}>
+                  <DatePicker
+                    label="Tanggal Selesai"
+                    value={formData.endDate}
+                    onChange={(date) => handleChange('endDate', date)}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        error: !!formErrors.endDate,
+                        helperText: formErrors.endDate,
+                        InputProps: {
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <CalendarTodayIcon color="action" />
+                            </InputAdornment>
+                          ),
+                        },
+                      },
+                    }}
+                  />
+                </LocalizationProvider>
+              </Grid>
+              
+              {formData.type === 'short_leave' && (
+                <>
+                  <Grid item xs={12} sm={6}>
+                    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={id}>
+                      <TimePicker
+                        label="Waktu Mulai"
+                        value={formData.startTime}
+                        onChange={(time) => handleChange('startTime', time)}
+                        slotProps={{
+                          textField: {
+                            fullWidth: true,
+                            error: !!formErrors.startTime,
+                            helperText: formErrors.startTime,
+                            InputProps: {
+                              startAdornment: (
+                                <InputAdornment position="start">
+                                  <AccessTimeIcon color="action" />
+                                </InputAdornment>
+                              ),
+                            },
+                          },
+                        }}
+                      />
+                    </LocalizationProvider>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={id}>
+                      <TimePicker
+                        label="Waktu Selesai"
+                        value={formData.endTime}
+                        onChange={(time) => handleChange('endTime', time)}
+                        slotProps={{
+                          textField: {
+                            fullWidth: true,
+                            error: !!formErrors.endTime,
+                            helperText: formErrors.endTime,
+                            InputProps: {
+                              startAdornment: (
+                                <InputAdornment position="start">
+                                  <AccessTimeIcon color="action" />
+                                </InputAdornment>
+                              ),
+                            },
+                          },
+                        }}
+                      />
+                    </LocalizationProvider>
+                  </Grid>
+                </>
+              )}
+            </Grid>
+            
+            {formData.startDate && formData.endDate && (
+              <Box sx={{ mt: 3, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
+                <Typography variant="subtitle1" gutterBottom>
+                  Informasi Durasi
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {formData.startDate && formData.endDate && (
+                    <>
+                      Durasi: {Math.max(1, Math.floor((formData.endDate - formData.startDate) / (1000 * 60 * 60 * 24)) + 1)} hari
+                      {formData.type === 'short_leave' && formData.startTime && formData.endTime && (
+                        <>, {Math.floor((formData.endTime - formData.startTime) / (1000 * 60))} menit</>
+                      )}
+                    </>
+                  )}
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        );
+      case 2:
+        return (
+          <Box sx={{ mt: 3 }}>
+            <TextField
+              fullWidth
+              label="Alasan"
+              multiline
+              rows={4}
+              value={formData.reason}
+              onChange={(e) => handleChange('reason', e.target.value)}
+              error={!!formErrors.reason}
+              helperText={formErrors.reason || `${formData.reason.length}/10 karakter minimum`}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1.5 }}>
+                    <DescriptionIcon color="action" />
+                  </InputAdornment>
+                ),
+              }}
+            />
+            
+            <Box sx={{ mt: 3, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
+              <Typography variant="subtitle1" gutterBottom>
+                Ringkasan Perijinan
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="body2" color="text.secondary">
+                    Tipe Perijinan
+                  </Typography>
+                  <Typography variant="body1">
+                    {getPermissionTypeLabel(formData.type)}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="body2" color="text.secondary">
+                    Durasi
+                  </Typography>
+                  <Typography variant="body1">
+                    {formData.startDate && formData.endDate && (
+                      <>
+                        {Math.max(1, Math.floor((formData.endDate - formData.startDate) / (1000 * 60 * 60 * 24)) + 1)} hari
+                        {formData.type === 'short_leave' && formData.startTime && formData.endTime && (
+                          <>, {Math.floor((formData.endTime - formData.startTime) / (1000 * 60))} menit</>
+                        )}
+                      </>
+                    )}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="body2" color="text.secondary">
+                    Tanggal Mulai
+                  </Typography>
+                  <Typography variant="body1">
+                    {formData.startDate && format(formData.startDate, 'dd MMMM yyyy', { locale: id })}
+                    {formData.type === 'short_leave' && formData.startTime && (
+                      <>, {format(formData.startTime, 'HH:mm')}</>
+                    )}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="body2" color="text.secondary">
+                    Tanggal Selesai
+                  </Typography>
+                  <Typography variant="body1">
+                    {formData.endDate && format(formData.endDate, 'dd MMMM yyyy', { locale: id })}
+                    {formData.type === 'short_leave' && formData.endTime && (
+                      <>, {format(formData.endTime, 'HH:mm')}</>
+                    )}
+                  </Typography>
+                </Grid>
+              </Grid>
+            </Box>
+          </Box>
+        );
+      default:
+        return null;
+    }
+  };
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
         <CircularProgress />
       </Box>
     );
   }
 
   return (
-    <Box sx={{ py: 2 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Buat Perijinan Baru
-      </Typography>
-
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-
-      <Card>
-        <CardHeader title="Form Perijinan" />
-        <Divider />
+    <Box className="permission-form-container">
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+        <IconButton 
+          onClick={() => navigate('/permissions')} 
+          sx={{ mr: 2 }}
+          aria-label="kembali"
+        >
+          <ArrowBackIcon />
+        </IconButton>
+        <Typography variant="h4" component="h1" className="permission-form-title">
+          Buat Perijinan Baru
+        </Typography>
+      </Box>
+      
+      {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+      
+      <Card className="permission-form-card">
         <CardContent>
-          <form onSubmit={handleSubmit} className="permission-form">
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <FormControl fullWidth required>
-                  <InputLabel>Tipe Perijinan</InputLabel>
-                  <Select
-                    name="type"
-                    value={formData.type}
-                    onChange={handleChange}
-                    label="Tipe Perijinan"
-                    disabled={submitting}
+          <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 4 }}>
+            {steps.map((label) => (
+              <Step key={label}>
+                <StepLabel>{label}</StepLabel>
+              </Step>
+            ))}
+          </Stepper>
+          
+          <form onSubmit={handleSubmit}>
+            {renderStepContent(activeStep)}
+            
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
+              <Button
+                disabled={activeStep === 0}
+                onClick={handleBack}
+                startIcon={<ArrowBackIcon />}
+              >
+                Kembali
+              </Button>
+              <Box>
+                {activeStep === steps.length - 1 ? (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    type="submit"
+                    disabled={submitLoading}
+                    startIcon={submitLoading ? <CircularProgress size={20} /> : <SaveIcon />}
                   >
-                    {permissionConfigs.map((config) => (
-                      <MenuItem key={config.type} value={config.type}>
-                        {config.label || getPermissionTypeLabel(config.type)}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  {selectedConfig && (
-                    <FormHelperText>
-                      Maksimal {selectedConfig.maxDuration} hari
-                      {selectedConfig.description && ` - ${selectedConfig.description}`}
-                    </FormHelperText>
-                  )}
-                </FormControl>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={idLocale}>
-                  <DatePicker
-                    label="Tanggal Mulai"
-                    value={formData.startDate}
-                    onChange={(date) => handleDateChange('startDate', date)}
-                    renderInput={(params) => (
-                      <TextField {...params} fullWidth required disabled={submitting} />
-                    )}
-                    disablePast
-                  />
-                </LocalizationProvider>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={idLocale}>
-                  <DatePicker
-                    label="Tanggal Selesai"
-                    value={formData.endDate}
-                    onChange={(date) => handleDateChange('endDate', date)}
-                    renderInput={(params) => (
-                      <TextField {...params} fullWidth required disabled={submitting} />
-                    )}
-                    disablePast
-                    minDate={formData.startDate}
-                    maxDate={
-                      formData.startDate && selectedConfig
-                        ? addDays(new Date(formData.startDate), selectedConfig.maxDuration - 1)
-                        : undefined
-                    }
-                  />
-                </LocalizationProvider>
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
-                  name="reason"
-                  label="Alasan"
-                  multiline
-                  rows={4}
-                  value={formData.reason}
-                  onChange={handleChange}
-                  fullWidth
-                  required
-                  disabled={submitting}
-                  placeholder="Jelaskan alasan perijinan Anda"
-                />
-              </Grid>
-
-              {selectedConfig && (
-                <Grid item xs={12}>
-                  <Alert severity="info">
-                    <Typography variant="body2">
-                      <strong>Informasi:</strong> Maksimal durasi {selectedConfig.maxDuration} hari.
-                      {selectedConfig.description && ` ${selectedConfig.description}`}
-                    </Typography>
-                  </Alert>
-                </Grid>
-              )}
-
-              <Grid item xs={12} sx={{ mt: 2 }}>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  color="primary"
-                  disabled={submitting}
-                  fullWidth
-                >
-                  {submitting ? <CircularProgress size={24} /> : 'Ajukan Perijinan'}
-                </Button>
-              </Grid>
-            </Grid>
+                    {submitLoading ? 'Menyimpan...' : 'Simpan Perijinan'}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleNext}
+                    endIcon={<ArrowForwardIcon />}
+                  >
+                    Lanjut
+                  </Button>
+                )}
+              </Box>
+            </Box>
           </form>
         </CardContent>
       </Card>
+      
+      <Snackbar
+        open={success}
+        autoHideDuration={6000}
+        onClose={() => setSuccess(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="success" sx={{ width: '100%' }}>
+          Perijinan berhasil dibuat! Mengalihkan ke halaman daftar perijinan...
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

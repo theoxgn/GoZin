@@ -1,15 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 body {
   margin: 0;
-  font-family: 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-family: 'Inter', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f5f5f5;
+  background-color: #f8fafc;
+  color: #1e293b;
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
 
+/* Loading Spinner */
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(37, 99, 235, 0.2);
+  border-radius: 50%;
+  border-top-color: #2563eb;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Auth Pages */
 .auth-container {
   display: flex;
   flex-direction: column;
@@ -17,76 +37,145 @@ code {
   justify-content: center;
   min-height: 100vh;
   padding: 20px;
-  background-color: #f5f5f5;
+  background-color: #f8fafc;
+  background-image: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
 }
 
 .auth-card {
   width: 100%;
   max-width: 450px;
   padding: 30px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 16px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08) !important;
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(10px);
 }
 
 .auth-header {
   text-align: center;
-  margin-bottom: 24px;
+  margin-bottom: 32px;
 }
 
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
 }
 
+/* Dashboard */
 .dashboard-container {
   padding: 24px;
 }
 
 .dashboard-card {
   margin-bottom: 24px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 12px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1) !important;
 }
 
 .dashboard-title {
-  margin-bottom: 16px;
+  margin-bottom: 24px;
+  font-weight: 600;
+  color: #1e293b;
 }
 
+.dashboard-stat-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.dashboard-stat-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 16px 0;
+  color: #2563eb;
+}
+
+/* Permission */
 .permission-form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px;
 }
 
 .permission-card {
-  margin-bottom: 16px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+  transition: all 0.2s ease-in-out;
+}
+
+.permission-card:hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1) !important;
 }
 
 .permission-status-pending {
-  color: #f57c00;
+  color: #f59e0b;
+  font-weight: 600;
 }
 
 .permission-status-approved_by_approval {
-  color: #1976d2;
+  color: #3b82f6;
+  font-weight: 600;
 }
 
 .permission-status-approved {
-  color: #2e7d32;
+  color: #10b981;
+  font-weight: 600;
 }
 
 .permission-status-rejected {
-  color: #d32f2f;
+  color: #ef4444;
+  font-weight: 600;
 }
 
+/* Tables */
 .table-container {
   overflow-x: auto;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
+.table-container table {
+  min-width: 650px;
+}
+
+.table-container th {
+  font-weight: 600;
+  background-color: #f8fafc;
+  color: #1e293b;
+}
+
+.table-container tr:hover {
+  background-color: #f1f5f9;
+}
+
+/* Forms */
 .config-form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .dashboard-container {
+    padding: 16px;
+  }
+  
+  .dashboard-stat-value {
+    font-size: 2rem;
+  }
+  
+  .auth-card {
+    padding: 20px;
+  }
 }

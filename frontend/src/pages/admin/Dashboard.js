@@ -6,62 +6,118 @@ import {
   Button,
   Card,
   CardContent,
-  CircularProgress,
+  CardHeader,
   Divider,
   Grid,
-  Paper,
   Typography,
+  List,
+  ListItem,
+  ListItemText,
+  Chip,
+  CircularProgress,
   Alert,
+  Paper,
+  IconButton,
+  Stack,
+  useTheme,
 } from '@mui/material';
 import {
+  Add as AddIcon,
+  ListAlt as ListAltIcon,
+  Person as PersonIcon,
+  Category as CategoryIcon,
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
   Pending as PendingIcon,
-  People as PeopleIcon,
+  ArrowForward as ArrowForwardIcon,
+  CalendarToday as CalendarTodayIcon,
+  PeopleAlt as PeopleAltIcon,
   Settings as SettingsIcon,
-  List as ListIcon,
 } from '@mui/icons-material';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import { Doughnut } from 'react-chartjs-2';
+
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 function AdminDashboard() {
-  const [stats, setStats] = useState({
-    pendingCount: 0,
-    approvedCount: 0,
-    rejectedCount: 0,
-    userCount: 0,
-    permissionTypeCount: 0,
-  });
   const [recentPermissions, setRecentPermissions] = useState([]);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [approvedCount, setApprovedCount] = useState(0);
+  const [rejectedCount, setRejectedCount] = useState(0);
+  const [userCount, setUserCount] = useState(0);
+  const [permissionTypeCount, setPermissionTypeCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const theme = useTheme();
 
   useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        
+        // Fetch recent permissions
+        const recentResponse = await axios.get('/api/permissions', {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { limit: 5, sort: 'createdAt,desc' }
+        });
+        
+        // Fetch counts by status
+        const pendingResponse = await axios.get('/api/permissions', {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { status: 'pending', count: true }
+        });
+        
+        const approvedResponse = await axios.get('/api/permissions', {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { status: 'approved', count: true }
+        });
+        
+        const rejectedResponse = await axios.get('/api/permissions', {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { status: 'rejected', count: true }
+        });
+        
+        // Fetch user count
+        const userResponse = await axios.get('/api/users', {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { count: true }
+        });
+        
+        // Fetch permission type count
+        const typeResponse = await axios.get('/api/permission-types', {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { count: true }
+        });
+        
+        setRecentPermissions(recentResponse.data);
+        setPendingCount(pendingResponse.data.count);
+        setApprovedCount(approvedResponse.data.count);
+        setRejectedCount(rejectedResponse.data.count);
+        setUserCount(userResponse.data.count);
+        setPermissionTypeCount(typeResponse.data.count);
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err);
+        setError('Gagal memuat data dashboard');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchDashboardData();
   }, []);
 
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-      
-      // Fetch stats
-      const statsResponse = await axios.get('/api/admin/stats', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      
-      // Fetch recent permissions
-      const permissionsResponse = await axios.get('/api/permissions', {
-        headers: { Authorization: `Bearer ${token}` },
-        params: { limit: 5, page: 1 },
-      });
-      
-      setStats(statsResponse.data);
-      setRecentPermissions(permissionsResponse.data.permissions || permissionsResponse.data);
-      setError('');
-    } catch (err) {
-      console.error('Error fetching dashboard data:', err);
-      setError('Gagal memuat data dashboard');
-    } finally {
-      setLoading(false);
+  const getStatusChip = (status) => {
+    switch (status) {
+      case 'pending':
+        return <Chip label="Pending" color="warning" size="small" icon={<PendingIcon />} />;
+      case 'approved_by_approval':
+        return <Chip label="Disetujui Approval" color="info" size="small" icon={<CheckCircleIcon />} />;
+      case 'approved':
+        return <Chip label="Disetujui" color="success" size="small" icon={<CheckCircleIcon />} />;
+      case 'rejected':
+        return <Chip label="Ditolak" color="error" size="small" icon={<CancelIcon />} />;
+      default:
+        return <Chip label={status} size="small" />;
     }
   };
 
@@ -85,330 +141,406 @@ function AdminDashboard() {
     }
   };
 
-  const getStatusLabel = (status) => {
-    switch (status) {
-      case 'pending':
-        return 'Menunggu Persetujuan';
-      case 'approved_by_approval':
-        return 'Disetujui oleh Approval';
-      case 'approved':
-        return 'Disetujui';
-      case 'rejected':
-        return 'Ditolak';
-      default:
-        return status;
-    }
+  const chartData = {
+    labels: ['Pending', 'Disetujui', 'Ditolak'],
+    datasets: [
+      {
+        data: [pendingCount, approvedCount, rejectedCount],
+        backgroundColor: [
+          theme.palette.warning.main,
+          theme.palette.success.main,
+          theme.palette.error.main,
+        ],
+        borderColor: [
+          theme.palette.warning.light,
+          theme.palette.success.light,
+          theme.palette.error.light,
+        ],
+        borderWidth: 1,
+      },
+    ],
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'pending':
-        return 'primary';
-      case 'approved_by_approval':
-        return 'info';
-      case 'approved':
-        return 'success';
-      case 'rejected':
-        return 'error';
-      default:
-        return 'default';
-    }
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          boxWidth: 15,
+          padding: 15,
+          font: {
+            size: 12,
+          },
+        },
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            const label = context.label || '';
+            const value = context.raw || 0;
+            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+            const percentage = Math.round((value / total) * 100);
+            return `${label}: ${value} (${percentage}%)`;
+          }
+        }
+      }
+    },
+    cutout: '70%',
   };
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>
+    );
+  }
 
   return (
-    <Box sx={{ py: 2 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Dashboard Admin
-      </Typography>
+    <Box className="dashboard-container">
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" component="h1" className="dashboard-title">
+          Dashboard Admin
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
+          Ringkasan data dan aktivitas sistem
+        </Typography>
+      </Box>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-
-      {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-          <CircularProgress />
-        </Box>
-      ) : (
-        <>
-          <Grid container spacing={3} sx={{ mb: 4 }}>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card sx={{ height: '100%', bgcolor: '#f5f5f5' }}>
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                    <PendingIcon color="primary" sx={{ mr: 1, fontSize: 32 }} />
-                    <Typography variant="h6" component="div">
-                      Pending
-                    </Typography>
-                  </Box>
-                  <Typography variant="h3" component="div" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-                    {stats.pendingCount}
-                  </Typography>
-                  <Button 
-                    component={Link} 
-                    to="/permissions?status=pending" 
-                    variant="outlined" 
-                    size="small" 
-                    sx={{ mt: 2 }}
-                  >
-                    Lihat Semua
-                  </Button>
-                </CardContent>
-              </Card>
-            </Grid>
-            
-            <Grid item xs={12} sm={6} md={3}>
-              <Card sx={{ height: '100%', bgcolor: '#e8f5e9' }}>
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                    <CheckCircleIcon color="success" sx={{ mr: 1, fontSize: 32 }} />
-                    <Typography variant="h6" component="div">
-                      Disetujui
-                    </Typography>
-                  </Box>
-                  <Typography variant="h3" component="div" sx={{ fontWeight: 'bold', color: 'success.main' }}>
-                    {stats.approvedCount}
-                  </Typography>
-                  <Button 
-                    component={Link} 
-                    to="/permissions?status=approved" 
-                    variant="outlined" 
-                    color="success" 
-                    size="small" 
-                    sx={{ mt: 2 }}
-                  >
-                    Lihat Semua
-                  </Button>
-                </CardContent>
-              </Card>
-            </Grid>
-            
-            <Grid item xs={12} sm={6} md={3}>
-              <Card sx={{ height: '100%', bgcolor: '#ffebee' }}>
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                    <CancelIcon color="error" sx={{ mr: 1, fontSize: 32 }} />
-                    <Typography variant="h6" component="div">
-                      Ditolak
-                    </Typography>
-                  </Box>
-                  <Typography variant="h3" component="div" sx={{ fontWeight: 'bold', color: 'error.main' }}>
-                    {stats.rejectedCount}
-                  </Typography>
-                  <Button 
-                    component={Link} 
-                    to="/permissions?status=rejected" 
-                    variant="outlined" 
-                    color="error" 
-                    size="small" 
-                    sx={{ mt: 2 }}
-                  >
-                    Lihat Semua
-                  </Button>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            <Grid item xs={12} sm={6} md={3}>
-              <Card sx={{ height: '100%', bgcolor: '#e3f2fd' }}>
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                    <PeopleIcon color="info" sx={{ mr: 1, fontSize: 32 }} />
-                    <Typography variant="h6" component="div">
-                      Pengguna
-                    </Typography>
-                  </Box>
-                  <Typography variant="h3" component="div" sx={{ fontWeight: 'bold', color: 'info.main' }}>
-                    {stats.userCount}
-                  </Typography>
-                  <Button 
-                    component={Link} 
-                    to="/admin/users" 
-                    variant="outlined" 
-                    color="info" 
-                    size="small" 
-                    sx={{ mt: 2 }}
-                  >
-                    Kelola Pengguna
-                  </Button>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-
-          <Grid container spacing={3} sx={{ mb: 4 }}>
-            <Grid item xs={12} md={8}>
-              <Paper sx={{ p: 2 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <ListIcon sx={{ mr: 1 }} />
-                  <Typography variant="h6" component="h2">
-                    Perijinan Terbaru
-                  </Typography>
+      {/* Stats Cards */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card className="dashboard-card dashboard-stat-card">
+            <CardContent sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <Box 
+                  sx={{ 
+                    bgcolor: 'warning.light', 
+                    color: 'warning.dark',
+                    p: 1,
+                    borderRadius: 2,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    mr: 2
+                  }}
+                >
+                  <PendingIcon />
                 </Box>
-                <Divider sx={{ mb: 2 }} />
-                
-                {recentPermissions.length > 0 ? (
-                  <Grid container spacing={2}>
-                    {recentPermissions.map((permission) => (
-                      <Grid item xs={12} key={permission.id}>
-                        <Card variant="outlined">
-                          <CardContent>
-                            <Grid container spacing={2}>
-                              <Grid item xs={12} sm={3}>
-                                <Typography variant="subtitle2" color="textSecondary">
-                                  Nama
-                                </Typography>
-                                <Typography variant="body1">
-                                  {permission.userName || 'User'}
-                                </Typography>
-                              </Grid>
-                              
-                              <Grid item xs={6} sm={2}>
-                                <Typography variant="subtitle2" color="textSecondary">
-                                  Tipe
-                                </Typography>
-                                <Typography variant="body1">
+                <Typography variant="h6" fontWeight={600}>Pending</Typography>
+              </Box>
+              <Typography variant="h3" className="dashboard-stat-value">
+                {pendingCount}
+              </Typography>
+              <Button 
+                component={Link} 
+                to="/admin/permissions?status=pending" 
+                color="warning" 
+                variant="text" 
+                endIcon={<ArrowForwardIcon />}
+                sx={{ mt: 1, fontWeight: 500 }}
+              >
+                Lihat Detail
+              </Button>
+            </CardContent>
+          </Card>
+        </Grid>
+        
+        <Grid item xs={12} sm={6} md={3}>
+          <Card className="dashboard-card dashboard-stat-card">
+            <CardContent sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <Box 
+                  sx={{ 
+                    bgcolor: 'success.light', 
+                    color: 'success.dark',
+                    p: 1,
+                    borderRadius: 2,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    mr: 2
+                  }}
+                >
+                  <CheckCircleIcon />
+                </Box>
+                <Typography variant="h6" fontWeight={600}>Disetujui</Typography>
+              </Box>
+              <Typography variant="h3" className="dashboard-stat-value">
+                {approvedCount}
+              </Typography>
+              <Button 
+                component={Link} 
+                to="/admin/permissions?status=approved" 
+                color="success" 
+                variant="text" 
+                endIcon={<ArrowForwardIcon />}
+                sx={{ mt: 1, fontWeight: 500 }}
+              >
+                Lihat Detail
+              </Button>
+            </CardContent>
+          </Card>
+        </Grid>
+        
+        <Grid item xs={12} sm={6} md={3}>
+          <Card className="dashboard-card dashboard-stat-card">
+            <CardContent sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <Box 
+                  sx={{ 
+                    bgcolor: 'primary.light', 
+                    color: 'primary.dark',
+                    p: 1,
+                    borderRadius: 2,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    mr: 2
+                  }}
+                >
+                  <PeopleAltIcon />
+                </Box>
+                <Typography variant="h6" fontWeight={600}>Pengguna</Typography>
+              </Box>
+              <Typography variant="h3" className="dashboard-stat-value">
+                {userCount}
+              </Typography>
+              <Button 
+                component={Link} 
+                to="/admin/users" 
+                color="primary" 
+                variant="text" 
+                endIcon={<ArrowForwardIcon />}
+                sx={{ mt: 1, fontWeight: 500 }}
+              >
+                Kelola Pengguna
+              </Button>
+            </CardContent>
+          </Card>
+        </Grid>
+        
+        <Grid item xs={12} sm={6} md={3}>
+          <Card className="dashboard-card dashboard-stat-card">
+            <CardContent sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <Box 
+                  sx={{ 
+                    bgcolor: 'info.light', 
+                    color: 'info.dark',
+                    p: 1,
+                    borderRadius: 2,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    mr: 2
+                  }}
+                >
+                  <CategoryIcon />
+                </Box>
+                <Typography variant="h6" fontWeight={600}>Tipe Perijinan</Typography>
+              </Box>
+              <Typography variant="h3" className="dashboard-stat-value">
+                {permissionTypeCount}
+              </Typography>
+              <Button 
+                component={Link} 
+                to="/admin/permission-types" 
+                color="info" 
+                variant="text" 
+                endIcon={<ArrowForwardIcon />}
+                sx={{ mt: 1, fontWeight: 500 }}
+              >
+                Kelola Tipe
+              </Button>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Chart and Recent Permissions */}
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={5}>
+          <Card className="dashboard-card" sx={{ height: '100%' }}>
+            <CardHeader 
+              title="Distribusi Status" 
+              sx={{ 
+                pb: 0,
+                '& .MuiCardHeader-title': {
+                  fontSize: '1.25rem',
+                  fontWeight: 600
+                }
+              }}
+            />
+            <CardContent sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 300 }}>
+              {pendingCount + approvedCount + rejectedCount > 0 ? (
+                <Box sx={{ width: '100%', height: '100%', position: 'relative' }}>
+                  <Doughnut data={chartData} options={chartOptions} />
+                  <Box 
+                    sx={{ 
+                      position: 'absolute', 
+                      top: '50%', 
+                      left: '50%', 
+                      transform: 'translate(-50%, -50%)',
+                      textAlign: 'center'
+                    }}
+                  >
+                    <Typography variant="h4" fontWeight={600}>
+                      {pendingCount + approvedCount + rejectedCount}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Total
+                    </Typography>
+                  </Box>
+                </Box>
+              ) : (
+                <Typography variant="body1" color="text.secondary" sx={{ py: 4 }}>
+                  Belum ada data perijinan
+                </Typography>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={7}>
+          <Card className="dashboard-card" sx={{ height: '100%' }}>
+            <CardHeader 
+              title="Perijinan Terbaru" 
+              action={
+                <Button
+                  component={Link}
+                  to="/admin/permissions"
+                  color="primary"
+                  endIcon={<ArrowForwardIcon />}
+                  sx={{ fontWeight: 500 }}
+                >
+                  Lihat Semua
+                </Button>
+              }
+              sx={{ 
+                pb: 0,
+                '& .MuiCardHeader-title': {
+                  fontSize: '1.25rem',
+                  fontWeight: 600
+                }
+              }}
+            />
+            <CardContent>
+              {recentPermissions.length > 0 ? (
+                <List sx={{ p: 0 }}>
+                  {recentPermissions.map((permission, index) => (
+                    <React.Fragment key={permission.id}>
+                      <ListItem 
+                        component={Link} 
+                        to={`/admin/permissions/${permission.id}`}
+                        sx={{ 
+                          py: 2, 
+                          px: 3,
+                          borderRadius: 2,
+                          textDecoration: 'none',
+                          color: 'inherit',
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            bgcolor: 'action.hover',
+                          }
+                        }}
+                      >
+                        <Grid container spacing={2} alignItems="center">
+                          <Grid item xs={12} sm={4}>
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <CalendarTodayIcon 
+                                fontSize="small" 
+                                color="action" 
+                                sx={{ mr: 1.5 }} 
+                              />
+                              <Box>
+                                <Typography variant="subtitle2" fontWeight={600}>
                                   {getPermissionTypeLabel(permission.type)}
                                 </Typography>
-                              </Grid>
-                              
-                              <Grid item xs={6} sm={3}>
-                                <Typography variant="subtitle2" color="textSecondary">
-                                  Tanggal
+                                <Typography variant="caption" color="text.secondary">
+                                  {permission.user?.name || 'Unknown'}
                                 </Typography>
-                                <Typography variant="body1">
+                              </Box>
+                            </Box>
+                          </Grid>
+                          <Grid item xs={12} sm={3}>
+                            <Typography variant="body2">
+                              {permission.startDate && permission.endDate ? (
+                                <>
                                   {formatDate(permission.startDate)}
-                                  {permission.startDate !== permission.endDate && 
-                                    <><br />{`s/d ${formatDate(permission.endDate)}`}</>
-                                  }
-                                </Typography>
-                              </Grid>
-                              
-                              <Grid item xs={6} sm={2}>
-                                <Typography variant="subtitle2" color="textSecondary">
-                                  Status
-                                </Typography>
-                                <Typography 
-                                  variant="body1" 
-                                  color={`${getStatusColor(permission.status)}.main`}
-                                >
-                                  {getStatusLabel(permission.status)}
-                                </Typography>
-                              </Grid>
-                              
-                              <Grid item xs={6} sm={2} sx={{ display: 'flex', alignItems: 'center', justifyContent: { xs: 'flex-start', sm: 'flex-end' } }}>
-                                <Button
-                                  variant="contained"
-                                  size="small"
-                                  component={Link}
-                                  to={`/permissions/${permission.id}`}
-                                >
-                                  Detail
-                                </Button>
-                              </Grid>
-                            </Grid>
-                          </CardContent>
-                        </Card>
-                      </Grid>
-                    ))}
-                  </Grid>
-                ) : (
-                  <Box sx={{ p: 2, textAlign: 'center' }}>
-                    <Typography variant="body1" color="textSecondary">
-                      Tidak ada data perijinan
-                    </Typography>
-                  </Box>
-                )}
-                
-                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-                  <Button
-                    variant="outlined"
-                    component={Link}
-                    to="/permissions"
-                  >
-                    Lihat Semua Perijinan
-                  </Button>
-                </Box>
-              </Paper>
-            </Grid>
-            
-            <Grid item xs={12} md={4}>
-              <Paper sx={{ p: 2, height: '100%' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <SettingsIcon sx={{ mr: 1 }} />
-                  <Typography variant="h6" component="h2">
-                    Pengaturan Sistem
+                                  {permission.startDate !== permission.endDate && (
+                                    <> - {formatDate(permission.endDate)}</>
+                                  )}
+                                </>
+                              ) : 'N/A'}
+                            </Typography>
+                          </Grid>
+                          <Grid item xs={12} sm={3}>
+                            {getStatusChip(permission.status)}
+                          </Grid>
+                          <Grid item xs={12} sm={2} sx={{ textAlign: 'right' }}>
+                            <IconButton 
+                              component={Link} 
+                              to={`/admin/permissions/${permission.id}`}
+                              size="small"
+                              color="primary"
+                            >
+                              <ArrowForwardIcon fontSize="small" />
+                            </IconButton>
+                          </Grid>
+                        </Grid>
+                      </ListItem>
+                      {index < recentPermissions.length - 1 && (
+                        <Divider sx={{ my: 0.5 }} />
+                      )}
+                    </React.Fragment>
+                  ))}
+                </List>
+              ) : (
+                <Box sx={{ py: 4, textAlign: 'center' }}>
+                  <Typography variant="body1" color="text.secondary">
+                    Belum ada perijinan yang dibuat
                   </Typography>
                 </Box>
-                <Divider sx={{ mb: 2 }} />
-                
-                <Grid container spacing={2}>
-                  <Grid item xs={12}>
-                    <Card variant="outlined" sx={{ mb: 2 }}>
-                      <CardContent>
-                        <Typography variant="subtitle1" gutterBottom>
-                          Konfigurasi Perijinan
-                        </Typography>
-                        <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-                          Kelola tipe perijinan, durasi maksimal, dan pengaturan lainnya
-                        </Typography>
-                        <Button
-                          variant="contained"
-                          component={Link}
-                          to="/admin/permission-config"
-                          fullWidth
-                        >
-                          Kelola Konfigurasi
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                  
-                  <Grid item xs={12}>
-                    <Card variant="outlined" sx={{ mb: 2 }}>
-                      <CardContent>
-                        <Typography variant="subtitle1" gutterBottom>
-                          Manajemen Pengguna
-                        </Typography>
-                        <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-                          Kelola pengguna, peran, dan hak akses
-                        </Typography>
-                        <Button
-                          variant="contained"
-                          component={Link}
-                          to="/admin/users"
-                          fullWidth
-                        >
-                          Kelola Pengguna
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                  
-                  <Grid item xs={12}>
-                    <Card variant="outlined">
-                      <CardContent>
-                        <Typography variant="subtitle1" gutterBottom>
-                          Statistik Sistem
-                        </Typography>
-                        <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-                          Lihat statistik penggunaan sistem
-                        </Typography>
-                        <Button
-                          variant="contained"
-                          component={Link}
-                          to="/admin/stats"
-                          fullWidth
-                        >
-                          Lihat Statistik
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                </Grid>
-              </Paper>
-            </Grid>
-          </Grid>
-        </>
-      )}
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Quick Actions */}
+      <Box sx={{ mt: 4, textAlign: 'center' }}>
+        <Button
+          component={Link}
+          to="/admin/users/create"
+          variant="contained"
+          color="primary"
+          size="large"
+          startIcon={<PersonIcon />}
+          sx={{ mr: 2, px: 3, py: 1.5, fontWeight: 600 }}
+        >
+          Tambah Pengguna
+        </Button>
+        <Button
+          component={Link}
+          to="/admin/permission-types"
+          variant="outlined"
+          color="primary"
+          size="large"
+          startIcon={<SettingsIcon />}
+          sx={{ px: 3, py: 1.5, fontWeight: 600 }}
+        >
+          Kelola Tipe Perijinan
+        </Button>
+      </Box>
     </Box>
   );
 }
