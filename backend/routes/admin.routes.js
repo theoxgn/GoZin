@@ -7,7 +7,7 @@ const { verifyToken, isAdmin } = require('../middleware/auth.middleware');
 router.get('/dashboard', verifyToken, isAdmin, adminController.getDashboardStats);
 
 // Route untuk mendapatkan semua konfigurasi perijinan
-router.get('/permission-configs', verifyToken, isAdmin, adminController.getAllPermissionConfigs);
+router.get('/permission-configs', verifyToken, adminController.getAllPermissionConfigs);
 
 // Route untuk mendapatkan konfigurasi perijinan berdasarkan tipe
 router.get('/permission-configs/:type', verifyToken, isAdmin, adminController.getPermissionConfigByType);

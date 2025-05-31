@@ -78,10 +78,12 @@ function CreatePermission() {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/permission-types', {
+      console.log('Fetching permission types with token:', token);
+      const response = await axios.get('/api/admin/permission-configs', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setPermissionTypes(response.data);
+      console.log('Permission types response:', response.data);
+      setPermissionTypes(response.data.configs || response.data);
     } catch (err) {
       console.error('Error fetching permission types:', err);
       setError('Gagal memuat tipe perijinan');
@@ -303,8 +305,8 @@ function CreatePermission() {
                 }
               >
                 {permissionTypes.map((type) => (
-                  <MenuItem key={type.id || type.code} value={type.code}>
-                    {type.name || getPermissionTypeLabel(type.code)}
+                  <MenuItem key={type.id} value={type.permissionType}>
+                    {type.label}
                   </MenuItem>
                 ))}
               </Select>
