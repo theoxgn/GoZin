@@ -7,7 +7,7 @@ const sequelize = require('sequelize');
  */
 exports.getApprovedByApprovalPermissions = async (req, res) => {
   try {
-    const { type, startDate, endDate } = req.query;
+    const { type, startDate, endDate, limit, page } = req.query;
     
     // Buat kondisi filter
     const whereCondition = { status: 'approved_by_approval' };
@@ -32,21 +32,20 @@ exports.getApprovedByApprovalPermissions = async (req, res) => {
       };
     }
     
+    const offset = (page - 1) * limit; // Calculate offset for pagination
+
     const permissions = await Permission.findAll({
       where: whereCondition,
       include: [
         {
           model: User,
-          as: 'user',
+          as: 'user', // Specify the alias for the user who created the permission
           attributes: ['id', 'name', 'email', 'department', 'position']
-        },
-        {
-          model: User,
-          as: 'approver',
-          attributes: ['id', 'name', 'email']
         }
       ],
-      order: [['approvalDate', 'ASC']]
+      order: [['approvalDate', 'ASC']],
+      limit: limit ? parseInt(limit) : undefined, // Apply limit for pagination
+      offset: offset || undefined, // Apply offset for pagination
     });
     
     res.status(200).json({
@@ -72,11 +71,6 @@ exports.approvePermission = async (req, res) => {
         {
           model: User,
           as: 'user',
-          attributes: ['id', 'name', 'email']
-        },
-        {
-          model: User,
-          as: 'approver',
           attributes: ['id', 'name', 'email']
         }
       ]

@@ -25,7 +25,7 @@ import PendingPermissions from './pages/approval/PendingPermissions';
 
 // HRD Pages
 import HrdDashboard from './pages/hrd/Dashboard';
-// import ApprovedByApprovalPermissions from './pages/hrd/ApprovedByApprovalPermissions';
+import ApprovedByApprovalPermissions from './pages/hrd/PendingPermissions';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/Dashboard';
@@ -84,7 +84,7 @@ function App() {
           {user && (user.role === 'hrd' || user.role === 'admin') && (
             <>
               <Route path="hrd" element={<HrdDashboard />} />
-              {/* <Route path="hrd/pending" element={<ApprovedByApprovalPermissions />} /> */}
+              <Route path="hrd/pending" element={<ApprovedByApprovalPermissions />} />
             </>
           )}
 
