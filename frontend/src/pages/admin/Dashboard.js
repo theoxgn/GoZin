@@ -84,7 +84,7 @@ function AdminDashboard() {
         });
         
         // Fetch permission type count
-        const typeResponse = await axios.get('/api/permission-types', {
+        const typeResponse = await axios.get('/api/admin/permission-configs', {
           headers: { Authorization: `Bearer ${token}` },
           params: { count: true }
         });

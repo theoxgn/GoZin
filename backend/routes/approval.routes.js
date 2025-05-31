@@ -4,7 +4,7 @@ const approvalController = require('../controllers/approval.controller');
 const { verifyToken, isApproval } = require('../middleware/auth.middleware');
 
 // Route untuk mendapatkan daftar perijinan yang perlu diapprove
-router.get('/pending', verifyToken, isApproval, approvalController.getPendingPermissions);
+router.get('/pending', verifyToken, approvalController.getPendingPermissions);
 
 // Route untuk menyetujui perijinan
 router.put('/approve/:id', verifyToken, isApproval, approvalController.approvePermission);

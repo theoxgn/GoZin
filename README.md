@@ -2,6 +2,14 @@
 
 Aplikasi web untuk mengelola perizinan karyawan dengan fitur persetujuan bertingkat dan berbagai tipe perizinan.
 
+
+## Screenshot Aplikasi
+<div align="center">
+  <img src="https://github.com/theoxgn/GoZin/blob/main/hr.png" alt="Screenshot Home" width="800">
+  <img src="https://github.com/theoxgn/GoZin/blob/main/admin.png" alt="Screenshot Home" width="800">
+  <img src="https://github.com/theoxgn/GoZin/blob/main/approval.png" alt="Screenshot Home" width="800">
+</div>
+
 ## Fitur Utama
 
 ### Tipe Perizinan
@@ -40,7 +48,7 @@ Aplikasi web untuk mengelola perizinan karyawan dengan fitur persetujuan berting
 
 ### Prasyarat
 - Node.js (v14 atau lebih baru)
-- MySQL
+- PostgreSQL
 
 ### Langkah Instalasi
 

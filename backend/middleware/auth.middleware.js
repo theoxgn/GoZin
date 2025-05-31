@@ -72,7 +72,7 @@ const isAdmin = checkRole(['admin']);
 /**
  * Middleware untuk role approval atau HRD
  */
-const isApprovalOrHRD = checkRole(['approval', 'hrd']);
+const isApprovalOrHRD = checkRole(['approval', 'hrd','admin']);
 
 /**
  * Middleware untuk role admin atau HRD

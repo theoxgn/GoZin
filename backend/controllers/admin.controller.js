@@ -235,3 +235,55 @@ exports.createPermissionConfig = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+/**
+ * Controller untuk mendapatkan daftar user dengan pagination
+ */
+exports.getAllUsers = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search, role, department } = req.query;
+    
+    // Buat kondisi filter
+    const whereCondition = {};
+    
+    // Filter berdasarkan role
+    if (role) {
+      whereCondition.role = role;
+    }
+    
+    // Filter berdasarkan department
+    if (department) {
+      whereCondition.department = department;
+    }
+    
+    // Filter berdasarkan pencarian
+    if (search) {
+      whereCondition[Op.or] = [
+        { name: { [Op.like]: `%${search}%` } },
+        { email: { [Op.like]: `%${search}%` } }
+      ];
+    }
+    
+    // Hitung total data
+    const totalCount = await User.count({ where: whereCondition });
+    
+    // Ambil data dengan pagination
+    const users = await User.findAll({
+      where: whereCondition,
+      attributes: { exclude: ['password'] },
+      order: [['createdAt', 'DESC']],
+      limit: parseInt(limit),
+      offset: (parseInt(page) - 1) * parseInt(limit)
+    });
+    
+    res.status(200).json({
+      message: 'Daftar user berhasil dimuat',
+      users,
+      totalCount,
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(totalCount / parseInt(limit))
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

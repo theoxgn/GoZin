@@ -118,22 +118,24 @@ function MainLayout() {
   };
 
   const menuItems = [
-    // User Menu Items - Available to all authenticated users
-    { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
-    { text: 'Daftar Perijinan', icon: <ListAltIcon />, path: '/permissions' },
-    { text: 'Buat Perijinan', icon: <AddIcon />, path: '/permissions/create' },
+    // User Menu Items - Available to all authenticated users except admin
+    ...(user && user.role !== 'admin' ? [
+      { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
+      { text: 'Daftar Perijinan', icon: <ListAltIcon />, path: '/permissions' },
+      { text: 'Buat Perijinan', icon: <AddIcon />, path: '/permissions/create' },
+    ] : []),
     
     // Divider for role-specific menus
-    { divider: true },
+    ...(user && user.role !== 'admin' ? [{ divider: true }] : []),
     
     // Approval Menu Items
-    ...(user && (user.role === 'approval' || user.role === 'admin') ? [
+    ...(user && user.role === 'approval' ? [
       { text: 'Approval Dashboard', icon: <SupervisorAccountIcon />, path: '/approval' },
       { text: 'Perijinan Pending', icon: <ListAltIcon />, path: '/approval/pending' },
     ] : []),
     
     // HRD Menu Items
-    ...(user && (user.role === 'hrd' || user.role === 'admin') ? [
+    ...(user && user.role === 'hrd' ? [
       { text: 'HRD Dashboard', icon: <BusinessIcon />, path: '/hrd' },
       { text: 'Perijinan Disetujui Approval', icon: <ListAltIcon />, path: '/hrd/pending' },
     ] : []),
