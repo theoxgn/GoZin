@@ -28,7 +28,7 @@ import {
   Avatar,
 } from '@mui/material';
 import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
+import { id as idLocale } from 'date-fns/locale';
 import {
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
@@ -54,6 +54,7 @@ function PermissionDetail() {
   const [cancelError, setCancelError] = useState('');
 
   useEffect(() => {
+    console.log('PermissionDetail mounted with id:', id);
     fetchPermissionDetail();
   }, [id]);
 
@@ -61,10 +62,18 @@ function PermissionDetail() {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
+      console.log('Fetching permission with id:', id);
       const response = await axios.get(`/api/permissions/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setPermission(response.data);
+      console.log('API Response:', response.data);
+      if (response.data && response.data.permission) {
+        console.log('Setting permission data:', response.data.permission);
+        setPermission(response.data.permission);
+      } else {
+        console.error('Invalid response format or no permission data in response.data.permission');
+        setError('Gagal memuat detail perijinan: Invalid data format');
+      }
     } catch (err) {
       console.error('Error fetching permission detail:', err);
       setError('Gagal memuat detail perijinan');
@@ -83,7 +92,7 @@ function PermissionDetail() {
       setCancelLoading(true);
       setCancelError('');
       const token = localStorage.getItem('token');
-      await axios.post(`/api/permissions/${id}/cancel`, { reason: cancelReason }, {
+      await axios.put(`/api/permissions/${id}`, { reason: cancelReason }, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCancelDialogOpen(false);
@@ -131,12 +140,12 @@ function PermissionDetail() {
 
   const formatDate = (dateString) => {
     if (!dateString) return '-';
-    return format(new Date(dateString), 'dd MMMM yyyy', { locale: id });
+    return format(new Date(dateString), 'dd MMMM yyyy', { locale: idLocale });
   };
 
   const formatDateTime = (dateString) => {
     if (!dateString) return '-';
-    return format(new Date(dateString), 'dd MMM yyyy, HH:mm', { locale: id });
+    return format(new Date(dateString), 'dd MMM yyyy, HH:mm', { locale: idLocale });
   };
 
   const getStatusColor = (status) => {

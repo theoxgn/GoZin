@@ -13,7 +13,7 @@ router.get('/', verifyToken, isApprovalOrHRD, permissionController.getAllPermiss
 router.get('/:id', verifyToken, permissionController.getPermissionById);
 
 // Route untuk mengupdate perijinan (user)
-router.put('/:id', verifyToken, isUser, permissionController.updatePermission);
+router.put('/:id', verifyToken, permissionController.updatePermission);
 
 // Route untuk menghapus perijinan (user atau admin)
 router.delete('/:id', verifyToken, permissionController.deletePermission);
