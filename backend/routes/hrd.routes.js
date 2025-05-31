@@ -12,4 +12,7 @@ router.put('/approve/:id', verifyToken, isHRD, hrdController.approvePermission);
 // Route untuk menolak perijinan
 router.put('/reject/:id', verifyToken, isHRD, hrdController.rejectPermission);
 
+// Route untuk mendapatkan statistik perijinan
+router.get('/stats', verifyToken, isHRD, hrdController.getStats);
+
 module.exports = router;

@@ -102,7 +102,7 @@ exports.deleteUser = async (req, res) => {
  */
 exports.getMyPermissions = async (req, res) => {
   try {
-    const { status, type, startDate, endDate } = req.query;
+    const { status, type, startDate, endDate, search, page = 1, limit = 10 } = req.query;
     
     // Buat kondisi filter
     const whereCondition = { userId: req.userId };
@@ -131,27 +131,44 @@ exports.getMyPermissions = async (req, res) => {
         [Op.lte]: new Date(endDate)
       };
     }
+
+    // Filter berdasarkan pencarian
+    if (search) {
+      whereCondition[Op.or] = [
+        { reason: { [Op.like]: `%${search}%` } },
+        { type: { [Op.like]: `%${search}%` } }
+      ];
+    }
     
+    // Hitung total data
+    const totalCount = await Permission.count({ where: whereCondition });
+    
+    // Ambil data dengan pagination
     const permissions = await Permission.findAll({
       where: whereCondition,
       include: [
         {
           model: User,
-          as: 'approver',
+          as: 'approval',
           attributes: ['id', 'name', 'email']
         },
         {
           model: User,
-          as: 'hrdApprover',
+          as: 'hrd',
           attributes: ['id', 'name', 'email']
         }
       ],
-      order: [['createdAt', 'DESC']]
+      order: [['createdAt', 'DESC']],
+      limit: parseInt(limit),
+      offset: (parseInt(page) - 1) * parseInt(limit)
     });
     
     res.status(200).json({
       message: 'Daftar perijinan berhasil dimuat',
-      permissions
+      permissions,
+      totalCount,
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(totalCount / parseInt(limit))
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

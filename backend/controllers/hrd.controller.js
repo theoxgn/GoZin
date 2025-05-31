@@ -1,5 +1,6 @@
 const { Permission, User } = require('../models');
-const { Op } = require('sequelize');
+const { Op, Sequelize } = require('sequelize');
+const sequelize = require('sequelize');
 
 /**
  * Controller untuk mendapatkan daftar perijinan yang sudah disetujui oleh approval
@@ -161,6 +162,57 @@ exports.rejectPermission = async (req, res) => {
     res.status(200).json({
       message: 'Perijinan berhasil ditolak oleh HRD',
       permission
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/**
+ * Controller untuk mendapatkan statistik perijinan
+ */
+exports.getStats = async (req, res) => {
+  try {
+    const totalPermissions = await Permission.count();
+    const pendingPermissions = await Permission.count({
+      where: { status: 'approved_by_approval' }
+    });
+    const approvedPermissions = await Permission.count({
+      where: { status: 'approved' }
+    });
+    const rejectedPermissions = await Permission.count({
+      where: { status: 'rejected' }
+    });
+
+    // Get permissions by type
+    const permissionsByType = await Permission.findAll({
+      attributes: [
+        'type',
+        [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']
+      ],
+      group: ['type']
+    });
+
+    // Get permissions by department using raw query
+    const permissionsByDepartment = await Permission.sequelize.query(`
+      SELECT u.department, COUNT(p.id) as count
+      FROM "Permissions" p
+      JOIN "Users" u ON p."userId" = u.id
+      GROUP BY u.department
+    `, {
+      type: Sequelize.QueryTypes.SELECT
+    });
+
+    res.status(200).json({
+      message: 'Statistik perijinan berhasil dimuat',
+      stats: {
+        total: totalPermissions,
+        pending: pendingPermissions,
+        approved: approvedPermissions,
+        rejected: rejectedPermissions,
+        byType: permissionsByType,
+        byDepartment: permissionsByDepartment
+      }
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

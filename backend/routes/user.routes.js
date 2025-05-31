@@ -16,6 +16,6 @@ router.put('/:id', verifyToken, isAdmin, userController.updateUser);
 router.delete('/:id', verifyToken, isAdmin, userController.deleteUser);
 
 // Route untuk mendapatkan daftar perijinan milik user yang sedang login
-router.get('/permissions/me', verifyToken, isUser, userController.getMyPermissions);
+router.get('/permissions/me', verifyToken, userController.getMyPermissions);
 
 module.exports = router;

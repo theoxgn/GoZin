@@ -56,6 +56,7 @@ function Permissions() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
+  const [currentUser, setCurrentUser] = useState(null);
   
   // Filter states
   const [filters, setFilters] = useState({
@@ -70,6 +71,9 @@ function Permissions() {
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
+    // Get current user from localStorage
+    const user = JSON.parse(localStorage.getItem('user'));
+    setCurrentUser(user);
     fetchPermissions();
     fetchPermissionTypes();
   }, [page, rowsPerPage, filters]);
@@ -91,7 +95,7 @@ function Permissions() {
       if (filters.endDate) params.endDate = filters.endDate.toISOString().split('T')[0];
       if (filters.search) params.search = filters.search;
       
-      const response = await axios.get('/api/permissions', {
+      const response = await axios.get('/api/users/permissions/me', {
         headers: { Authorization: `Bearer ${token}` },
         params,
       });
