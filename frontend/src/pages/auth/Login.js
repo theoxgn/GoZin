@@ -16,6 +16,7 @@ import {
   Paper,
   Divider,
   useTheme,
+  alpha,
 } from '@mui/material';
 import {
   LockOutlined,
@@ -23,6 +24,7 @@ import {
   Visibility as VisibilityIcon,
   VisibilityOff as VisibilityOffIcon,
   Login as LoginIcon,
+  Business as BusinessIcon,
 } from '@mui/icons-material';
 
 function Login() {
@@ -64,20 +66,83 @@ function Login() {
   };
 
   return (
-    <Box className="auth-container">
+    <Box 
+      className="auth-container"
+      sx={{
+        background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)} 0%, ${alpha(theme.palette.primary.light, 0.2)} 100%)`,
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        py: 4,
+      }}
+    >
       <Container maxWidth="sm">
-        <Box sx={{ mb: 4, textAlign: 'center' }}>
-          <Typography variant="h4" component="h1" fontWeight="700" color="primary.dark">
+        <Box 
+          sx={{ 
+            mb: 4, 
+            textAlign: 'center',
+            animation: 'fadeInDown 0.8s ease-out',
+          }}
+        >
+          <Box
+            sx={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              bgcolor: 'primary.main',
+              color: 'white',
+              width: 80,
+              height: 80,
+              borderRadius: '50%',
+              mb: 2,
+              boxShadow: `0 8px 24px ${alpha(theme.palette.primary.main, 0.3)}`,
+            }}
+          >
+            <BusinessIcon sx={{ fontSize: 40 }} />
+          </Box>
+          <Typography 
+            variant="h4" 
+            component="h1" 
+            fontWeight="700" 
+            color="primary.dark"
+            sx={{ mb: 1 }}
+          >
             Sistem Perijinan Karyawan
           </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
-            Masuk untuk mengakses sistem perijinan
+          <Typography 
+            variant="body1" 
+            color="text.secondary"
+            sx={{ 
+              maxWidth: '400px',
+              mx: 'auto',
+              opacity: 0.8,
+            }}
+          >
+            Masuk untuk mengakses sistem perijinan karyawan
           </Typography>
         </Box>
         
-        <Card className="auth-card">
+        <Card 
+          className="auth-card"
+          sx={{
+            margin: '0 auto',
+            borderRadius: 4,
+            boxShadow: `0 12px 32px ${alpha(theme.palette.common.black, 0.1)}`,
+            backdropFilter: 'blur(10px)',
+            animation: 'fadeInUp 0.8s ease-out',
+          }}
+        >
           <CardContent sx={{ p: { xs: 3, md: 4 } }}>
-            <Box className="auth-header">
+            <Box 
+              className="auth-header"
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                mb: 4,
+              }}
+            >
               <Box 
                 sx={{ 
                   display: 'flex', 
@@ -85,24 +150,44 @@ function Login() {
                   justifyContent: 'center',
                   bgcolor: 'primary.main', 
                   color: 'white',
-                  width: 60,
-                  height: 60,
+                  width: 64,
+                  height: 64,
                   borderRadius: '50%',
-                  margin: '0 auto',
-                  boxShadow: `0 4px 14px ${theme.palette.primary.main}40`,
+                  mb: 2,
+                  boxShadow: `0 8px 24px ${alpha(theme.palette.primary.main, 0.3)}`,
                 }}
               >
-                <LockOutlined fontSize="large" />
+                <LockOutlined sx={{ fontSize: 32 }} />
               </Box>
-              <Typography variant="h5" component="h1" fontWeight="600" sx={{ mt: 2 }}>
+              <Typography 
+                variant="h5" 
+                component="h2" 
+                fontWeight="600"
+                sx={{ mb: 1 }}
+              >
                 Login
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography 
+                variant="body2" 
+                color="text.secondary"
+                sx={{ opacity: 0.8 }}
+              >
                 Masukkan kredensial Anda untuk melanjutkan
               </Typography>
             </Box>
 
-            {error && <Alert severity="error" sx={{ mb: 3, mt: 2 }}>{error}</Alert>}
+            {error && (
+              <Alert 
+                severity="error" 
+                sx={{ 
+                  mb: 3,
+                  borderRadius: 2,
+                  animation: 'shake 0.5s ease-in-out',
+                }}
+              >
+                {error}
+              </Alert>
+            )}
 
             <form onSubmit={handleSubmit} className="auth-form">
               <TextField
@@ -114,6 +199,18 @@ function Login() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={loading}
+                sx={{
+                  mb: 2,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'primary.main',
+                      },
+                    },
+                  },
+                }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -132,6 +229,18 @@ function Login() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={loading}
+                sx={{
+                  mb: 3,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'primary.main',
+                      },
+                    },
+                  },
+                }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -144,6 +253,12 @@ function Login() {
                         aria-label="toggle password visibility"
                         onClick={handleTogglePasswordVisibility}
                         edge="end"
+                        sx={{
+                          color: 'text.secondary',
+                          '&:hover': {
+                            color: 'primary.main',
+                          },
+                        }}
                       >
                         {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
                       </IconButton>
@@ -160,25 +275,48 @@ function Login() {
                 size="large"
                 disabled={loading}
                 sx={{ 
-                  mt: 3, 
                   py: 1.5,
+                  borderRadius: 2,
                   fontSize: '1rem',
                   fontWeight: 600,
-                  boxShadow: `0 4px 14px ${theme.palette.primary.main}40`,
+                  textTransform: 'none',
+                  boxShadow: `0 8px 24px ${alpha(theme.palette.primary.main, 0.3)}`,
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: `0 12px 28px ${alpha(theme.palette.primary.main, 0.4)}`,
+                  },
                 }}
                 startIcon={loading ? null : <LoginIcon />}
               >
                 {loading ? <CircularProgress size={24} /> : 'Login'}
               </Button>
 
-              <Box sx={{ mt: 3, textAlign: 'center' }}>
-                <Typography variant="body2" color="text.secondary">
+              <Box 
+                sx={{ 
+                  mt: 3, 
+                  textAlign: 'center',
+                  animation: 'fadeIn 1s ease-out',
+                }}
+              >
+                <Typography 
+                  variant="body2" 
+                  color="text.secondary"
+                  sx={{ opacity: 0.8 }}
+                >
                   Belum memiliki akun?{' '}
-                  <Link to="/register" style={{ 
-                    color: theme.palette.primary.main,
-                    textDecoration: 'none',
-                    fontWeight: 600,
-                  }}>
+                  <Link 
+                    to="/register" 
+                    style={{ 
+                      color: theme.palette.primary.main,
+                      textDecoration: 'none',
+                      fontWeight: 600,
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        color: theme.palette.primary.dark,
+                      },
+                    }}
+                  >
                     Daftar Sekarang
                   </Link>
                 </Typography>
@@ -187,8 +325,18 @@ function Login() {
           </CardContent>
         </Card>
         
-        <Box sx={{ mt: 4, textAlign: 'center' }}>
-          <Typography variant="body2" color="text.secondary">
+        <Box 
+          sx={{ 
+            mt: 4, 
+            textAlign: 'center',
+            animation: 'fadeIn 1.2s ease-out',
+          }}
+        >
+          <Typography 
+            variant="body2" 
+            color="text.secondary"
+            sx={{ opacity: 0.7 }}
+          >
             &copy; {new Date().getFullYear()} Sistem Perijinan Karyawan. All rights reserved.
           </Typography>
         </Box>
