@@ -155,9 +155,20 @@ function MainLayout() {
         py: 1.5,
       }}>
         {!miniDrawer && (
-          <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 700 }}>
-            Sistem Perijinan
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <img 
+              src="/main-logo.png" 
+              alt="Logo" 
+              style={{ 
+                width: '32px', 
+                height: '32px', 
+                objectFit: 'contain' 
+              }} 
+            />
+            <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 700 }}>
+              Sistem Perijinan
+            </Typography>
+          </Box>
         )}
         {!isMobile && (
           <IconButton onClick={handleMiniDrawer} size="small" sx={{ ml: miniDrawer ? 0 : 'auto' }}>

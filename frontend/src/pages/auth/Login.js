@@ -90,16 +90,20 @@ function Login() {
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              bgcolor: 'primary.main',
-              color: 'white',
               width: 80,
               height: 80,
-              borderRadius: '50%',
               mb: 2,
-              boxShadow: `0 8px 24px ${alpha(theme.palette.primary.main, 0.3)}`,
             }}
           >
-            <BusinessIcon sx={{ fontSize: 40 }} />
+            <img 
+              src="/main-logo.png" 
+              alt="Logo" 
+              style={{ 
+                width: '100%', 
+                height: '100%', 
+                objectFit: 'contain' 
+              }} 
+            />
           </Box>
           <Typography 
             variant="h4" 
