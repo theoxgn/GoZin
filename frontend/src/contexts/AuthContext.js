@@ -38,10 +38,17 @@ export const AuthProvider = ({ children }) => {
         },
       });
 
-      setUser(response.data);
+      if (response.data && response.data.user) {
+        setUser(response.data.user);
+      } else {
+        // If no user data is returned, clear the token and user state
+        localStorage.removeItem('token');
+        setUser(null);
+      }
       setLoading(false);
     } catch (error) {
       console.error('Error fetching user profile:', error);
+      // Clear token and user state on any error
       localStorage.removeItem('token');
       setUser(null);
       setLoading(false);
