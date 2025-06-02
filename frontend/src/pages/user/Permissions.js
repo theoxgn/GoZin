@@ -117,9 +117,12 @@ function Permissions() {
       const response = await axios.get('/api/admin/permission-configs', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setPermissionTypes(response.data);
+      // Pastikan kita mengambil array configs dari respons
+      setPermissionTypes(response.data.configs || []);
     } catch (err) {
       console.error('Error fetching permission types:', err);
+      // Inisialisasi dengan array kosong jika terjadi error
+      setPermissionTypes([]);
     }
   };
 
@@ -283,8 +286,8 @@ function Permissions() {
                     >
                       <MenuItem value="">Semua</MenuItem>
                       {permissionTypes.map((type) => (
-                        <MenuItem key={type.id || type.code} value={type.code}>
-                          {type.name || getPermissionTypeLabel(type.code)}
+                        <MenuItem key={type.id} value={type.permissionType}>
+                          {type.label || getPermissionTypeLabel(type.permissionType)}
                         </MenuItem>
                       ))}
                     </Select>
