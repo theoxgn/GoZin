@@ -50,9 +50,26 @@ module.exports = (sequelize) => {
       }
     },
     status: {
-      type: DataTypes.ENUM('pending', 'approved_by_approval', 'approved', 'rejected'),
+      type: DataTypes.ENUM('pending', 'approved_by_approval', 'approved', 'rejected', 'canceled'),
       allowNull: false,
       defaultValue: 'pending'
+    },
+    // Cancellation fields
+    cancelReason: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    canceledAt: {
+      type: DataTypes.DATE,
+      allowNull: true
+    },
+    canceledBy: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'Users',
+        key: 'id'
+      }
     },
     // Approval fields
     approvalId: {

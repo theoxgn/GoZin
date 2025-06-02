@@ -114,7 +114,7 @@ function Permissions() {
   const fetchPermissionTypes = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/permission-types', {
+      const response = await axios.get('/api/admin/permission-configs', {
         headers: { Authorization: `Bearer ${token}` },
       });
       setPermissionTypes(response.data);

@@ -7,7 +7,7 @@ const { verifyToken, isUser, isAdmin, isApprovalOrHRD } = require('../middleware
 router.post('/', verifyToken, permissionController.createPermission);
 
 // Route untuk mendapatkan semua perijinan (admin, approval, hrd)
-router.get('/', verifyToken, isApprovalOrHRD, permissionController.getAllPermissions);
+router.get('/', verifyToken, permissionController.getAllPermissions);
 
 // Route untuk mendapatkan detail perijinan berdasarkan ID
 router.get('/:id', verifyToken, permissionController.getPermissionById);
@@ -17,5 +17,8 @@ router.put('/:id', verifyToken, permissionController.updatePermission);
 
 // Route untuk menghapus perijinan (user atau admin)
 router.delete('/:id', verifyToken, permissionController.deletePermission);
+
+// Route untuk membatalkan perijinan oleh user
+router.post('/:id/cancel', verifyToken, permissionController.cancelPermission);
 
 module.exports = router;

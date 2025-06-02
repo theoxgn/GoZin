@@ -36,9 +36,28 @@ module.exports = {
         allowNull: false
       },
       status: {
-        type: Sequelize.ENUM('pending', 'approved_by_approval', 'approved', 'rejected'),
+        type: Sequelize.ENUM('pending', 'approved_by_approval', 'approved', 'rejected', 'canceled'),
         defaultValue: 'pending',
         allowNull: false
+      },
+      // Cancellation fields
+      cancelReason: {
+        type: Sequelize.TEXT,
+        allowNull: true
+      },
+      canceledAt: {
+        type: Sequelize.DATE,
+        allowNull: true
+      },
+      canceledBy: {
+        type: Sequelize.UUID,
+        allowNull: true,
+        references: {
+          model: 'Users',
+          key: 'id'
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'SET NULL'
       },
       approvalId: {
         type: Sequelize.UUID,

@@ -92,7 +92,7 @@ function PermissionDetail() {
       setCancelLoading(true);
       setCancelError('');
       const token = localStorage.getItem('token');
-      await axios.put(`/api/permissions/${id}`, { reason: cancelReason }, {
+      await axios.post(`/api/permissions/${id}/cancel`, { cancelReason }, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCancelDialogOpen(false);

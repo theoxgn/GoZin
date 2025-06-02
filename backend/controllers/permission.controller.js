@@ -327,3 +327,60 @@ exports.deletePermission = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+/**
+ * Controller untuk membatalkan perijinan oleh user
+ */
+exports.cancelPermission = async (req, res) => {
+  const transaction = await sequelize.transaction();
+  
+  try {
+    const { cancelReason } = req.body;
+    
+    if (!cancelReason || !cancelReason.trim()) {
+      await transaction.rollback();
+      return res.status(400).json({ message: 'Alasan pembatalan harus diisi' });
+    }
+    
+    const permission = await Permission.findByPk(req.params.id);
+    
+    if (!permission) {
+      await transaction.rollback();
+      return res.status(404).json({ message: 'Perijinan tidak ditemukan' });
+    }
+    
+    // Cek apakah user yang membatalkan adalah pemilik perijinan
+    if (permission.userId !== req.userId) {
+      await transaction.rollback();
+      return res.status(403).json({ 
+        message: 'Anda tidak memiliki akses untuk membatalkan perijinan ini' 
+      });
+    }
+    
+    // Cek apakah perijinan sudah dalam status final (approved atau rejected)
+    if (['canceled', 'rejected'].includes(permission.status)) {
+      await transaction.rollback();
+      return res.status(400).json({ 
+        message: 'Perijinan yang sudah dibatalkan atau ditolak tidak dapat dibatalkan lagi' 
+      });
+    }
+    
+    // Update status perijinan menjadi canceled
+    await permission.update({
+      status: 'canceled',
+      cancelReason,
+      canceledAt: new Date(),
+      canceledBy: req.userId
+    }, { transaction });
+    
+    await transaction.commit();
+    
+    res.status(200).json({
+      message: 'Perijinan berhasil dibatalkan',
+      permission
+    });
+  } catch (error) {
+    await transaction.rollback();
+    res.status(500).json({ message: error.message });
+  }
+};
