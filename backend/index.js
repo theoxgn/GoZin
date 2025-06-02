@@ -10,6 +10,8 @@ const permissionRoutes = require('./routes/permission.routes');
 const approvalRoutes = require('./routes/approval.routes');
 const hrdRoutes = require('./routes/hrd.routes');
 const adminRoutes = require('./routes/admin.routes');
+const notificationRoutes = require('./routes/notification.routes');
+const quotaRoutes = require('./routes/quota.routes');
 
 const app = express();
 
@@ -25,6 +27,8 @@ app.use('/api/permissions', permissionRoutes);
 app.use('/api/approvals', approvalRoutes);
 app.use('/api/hrd', hrdRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/quotas', quotaRoutes);
 
 // Root route
 app.get('/', (req, res) => {

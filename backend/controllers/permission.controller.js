@@ -1,5 +1,6 @@
 const { Permission, User, PermissionConfig, sequelize } = require('../models');
 const { Op } = require('sequelize');
+const notificationService = require('../services/notification.service');
 
 /**
  * Controller untuk membuat perijinan baru
@@ -90,6 +91,15 @@ exports.createPermission = async (req, res) => {
     }, { transaction });
     
     await transaction.commit();
+    
+    // Buat notifikasi untuk user
+    try {
+      await notificationService.createNewPermissionNotification(permission);
+      console.log('Notification sent for new permission creation');
+    } catch (error) {
+      console.error('Failed to create notification for new permission:', error);
+      // Lanjutkan proses meskipun notifikasi gagal
+    }
     
     res.status(201).json({
       message: 'Perijinan berhasil dibuat',
@@ -365,6 +375,9 @@ exports.cancelPermission = async (req, res) => {
       });
     }
     
+    // Simpan status lama untuk notifikasi
+    const oldStatus = permission.status;
+    
     // Update status perijinan menjadi canceled
     await permission.update({
       status: 'canceled',
@@ -374,6 +387,20 @@ exports.cancelPermission = async (req, res) => {
     }, { transaction });
     
     await transaction.commit();
+    
+    // Buat notifikasi untuk user
+    try {
+      await notificationService.createPermissionStatusNotification(
+        permission,
+        oldStatus,
+        'canceled',
+        req.userId
+      );
+      console.log('Notification sent for permission cancellation');
+    } catch (error) {
+      console.error('Failed to create notification for permission cancellation:', error);
+      // Lanjutkan proses meskipun notifikasi gagal
+    }
     
     res.status(200).json({
       message: 'Perijinan berhasil dibatalkan',

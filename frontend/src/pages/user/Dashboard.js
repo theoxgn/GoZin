@@ -21,6 +21,8 @@ import {
   IconButton,
   Stack,
   useTheme,
+  LinearProgress,
+  Tooltip,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -32,6 +34,7 @@ import {
   ArrowForward as ArrowForwardIcon,
   CalendarToday as CalendarTodayIcon,
   MoreVert as MoreVertIcon,
+  EventAvailable as EventAvailableIcon,
 } from '@mui/icons-material';
 
 function UserDashboard() {
@@ -40,8 +43,11 @@ function UserDashboard() {
   const [pendingCount, setPendingCount] = useState(0);
   const [approvedCount, setApprovedCount] = useState(0);
   const [rejectedCount, setRejectedCount] = useState(0);
+  const [quotas, setQuotas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [quotaLoading, setQuotaLoading] = useState(true);
+  const [quotaError, setQuotaError] = useState('');
   const theme = useTheme();
 
   useEffect(() => {
@@ -83,7 +89,27 @@ function UserDashboard() {
       }
     };
 
+    const fetchQuotaData = async () => {
+      try {
+        setQuotaLoading(true);
+        const token = localStorage.getItem('token');
+        
+        // Fetch quota data
+        const response = await axios.get('/api/quotas', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        setQuotas(response.data.quotas);
+      } catch (err) {
+        console.error('Error fetching quota data:', err);
+        setQuotaError('Gagal memuat data kuota perizinan');
+      } finally {
+        setQuotaLoading(false);
+      }
+    };
+
     fetchDashboardData();
+    fetchQuotaData();
   }, []);
 
   const getStatusChip = (status) => {
@@ -255,6 +281,89 @@ function UserDashboard() {
               >
                 Lihat Detail
               </Button>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+      
+      {/* Quota Cards */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12}>
+          <Card className="dashboard-card">
+            <CardHeader 
+              title="Sisa Kuota Perizinan Bulan Ini" 
+              action={
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <EventAvailableIcon sx={{ mr: 1, color: 'primary.main' }} />
+                  <Typography variant="body2" color="text.secondary">
+                    {new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}
+                  </Typography>
+                </Box>
+              }
+              sx={{ 
+                pb: 0,
+                '& .MuiCardHeader-title': {
+                  fontSize: '1.25rem',
+                  fontWeight: 600
+                }
+              }}
+            />
+            <CardContent>
+              {quotaLoading ? (
+                <Box sx={{ py: 4, textAlign: 'center' }}>
+                  <CircularProgress size={30} />
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                    Memuat data kuota perizinan...
+                  </Typography>
+                </Box>
+              ) : quotaError ? (
+                <Alert severity="error" sx={{ my: 2 }}>{quotaError}</Alert>
+              ) : quotas.length > 0 ? (
+                <Grid container spacing={3}>
+                  {quotas.map((quota) => (
+                    <Grid item xs={12} md={6} key={quota.type}>
+                      <Box sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 2 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                          <Typography variant="subtitle1" fontWeight={600}>
+                            {quota.label}
+                          </Typography>
+                          <Tooltip title={quota.description || `Maksimal ${quota.maxDurationDays} hari per pengajuan`}>
+                            <Typography variant="body2" color="primary.main" sx={{ cursor: 'help' }}>
+                              Info
+                            </Typography>
+                          </Tooltip>
+                        </Box>
+                        
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                          <Typography variant="body2" color="text.secondary">
+                            Terpakai: {quota.used} dari {quota.maxPerMonth}
+                          </Typography>
+                          <Typography 
+                            variant="body2" 
+                            fontWeight={600}
+                            color={quota.remaining > 0 ? 'success.main' : 'error.main'}
+                          >
+                            Sisa: {quota.remaining}
+                          </Typography>
+                        </Box>
+                        
+                        <LinearProgress 
+                          variant="determinate" 
+                          value={(quota.used / quota.maxPerMonth) * 100}
+                          color={quota.remaining > 0 ? 'primary' : 'error'}
+                          sx={{ height: 8, borderRadius: 4 }}
+                        />
+                      </Box>
+                    </Grid>
+                  ))}
+                </Grid>
+              ) : (
+                <Box sx={{ py: 4, textAlign: 'center' }}>
+                  <Typography variant="body1" color="text.secondary">
+                    Tidak ada data kuota perizinan
+                  </Typography>
+                </Box>
+              )}
             </CardContent>
           </Card>
         </Grid>

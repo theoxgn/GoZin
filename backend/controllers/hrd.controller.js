@@ -1,6 +1,7 @@
 const { Permission, User } = require('../models');
 const { Op, Sequelize } = require('sequelize');
 const sequelize = require('sequelize');
+const notificationService = require('../services/notification.service');
 
 /**
  * Controller untuk mendapatkan daftar perijinan yang sudah disetujui oleh approval
@@ -87,6 +88,9 @@ exports.approvePermission = async (req, res) => {
       });
     }
     
+    // Simpan status lama untuk notifikasi
+    const oldStatus = permission.status;
+    
     // Update status perijinan
     await permission.update({
       status: 'approved',
@@ -94,6 +98,20 @@ exports.approvePermission = async (req, res) => {
       hrdDate: new Date(),
       hrdNote: note
     });
+    
+    // Buat notifikasi untuk user
+    try {
+      await notificationService.createPermissionStatusNotification(
+        permission,
+        oldStatus,
+        'approved',
+        req.userId
+      );
+      console.log('Notification sent for permission approval by HRD');
+    } catch (error) {
+      console.error('Failed to create notification for permission approval by HRD:', error);
+      // Lanjutkan proses meskipun notifikasi gagal
+    }
     
     res.status(200).json({
       message: 'Perijinan berhasil disetujui oleh HRD',
@@ -145,6 +163,9 @@ exports.rejectPermission = async (req, res) => {
       });
     }
     
+    // Simpan status lama untuk notifikasi
+    const oldStatus = permission.status;
+    
     // Update status perijinan
     await permission.update({
       status: 'rejected',
@@ -152,6 +173,14 @@ exports.rejectPermission = async (req, res) => {
       hrdDate: new Date(),
       rejectionReason
     });
+    
+    // Buat notifikasi untuk user
+    await notificationService.createPermissionStatusNotification(
+      permission,
+      oldStatus,
+      'rejected',
+      req.userId
+    );
     
     res.status(200).json({
       message: 'Perijinan berhasil ditolak oleh HRD',

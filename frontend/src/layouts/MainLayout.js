@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useNotification } from '../contexts/NotificationContext';
 import {
   AppBar,
   Box,
@@ -47,6 +48,7 @@ const drawerWidth = 260;
 
 function MainLayout() {
   const { user, logout } = useAuth();
+  const { notifications, unreadCount, loading: notificationLoading, markAsRead, markAllAsRead, formatRelativeTime } = useNotification();
   const navigate = useNavigate();
   const location = useLocation();
   const theme = useTheme();
@@ -86,6 +88,15 @@ function MainLayout() {
 
   const handleNotificationMenuClose = () => {
     setNotificationAnchorEl(null);
+  };
+  
+  const handleNotificationClick = (notificationId) => {
+    markAsRead(notificationId);
+    handleNotificationMenuClose();
+  };
+  
+  const handleMarkAllAsRead = () => {
+    markAllAsRead();
   };
 
   const handleLogout = () => {
@@ -275,7 +286,7 @@ function MainLayout() {
                   sx={{ mr: 1 }}
                   onClick={handleNotificationMenuOpen}
                 >
-                  <Badge badgeContent={3} color="error">
+                  <Badge badgeContent={unreadCount} color="error">
                     <NotificationsIcon />
                   </Badge>
                 </IconButton>
@@ -301,32 +312,69 @@ function MainLayout() {
                     width: 320,
                     borderRadius: 2,
                     overflow: 'hidden',
+                    maxHeight: '70vh',
                   }
                 }}
               >
-                <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
+                <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Typography variant="subtitle1" fontWeight={600}>Notifikasi</Typography>
+                  {unreadCount > 0 && (
+                    <Button 
+                      size="small" 
+                      onClick={handleMarkAllAsRead}
+                      sx={{ textTransform: 'none' }}
+                    >
+                      Tandai Semua Dibaca
+                    </Button>
+                  )}
                 </Box>
-                <MenuItem onClick={handleNotificationMenuClose} sx={{ py: 2 }}>
-                  <Box>
-                    <Typography variant="body2" fontWeight={500}>Perijinan Anda telah disetujui</Typography>
-                    <Typography variant="caption" color="text.secondary">2 jam yang lalu</Typography>
+                
+                {notificationLoading ? (
+                  <Box sx={{ p: 3, textAlign: 'center' }}>
+                    <Typography variant="body2" color="text.secondary">Memuat notifikasi...</Typography>
                   </Box>
-                </MenuItem>
-                <MenuItem onClick={handleNotificationMenuClose} sx={{ py: 2 }}>
-                  <Box>
-                    <Typography variant="body2" fontWeight={500}>Ada perijinan baru yang perlu disetujui</Typography>
-                    <Typography variant="caption" color="text.secondary">5 jam yang lalu</Typography>
+                ) : notifications.length === 0 ? (
+                  <Box sx={{ p: 3, textAlign: 'center' }}>
+                    <Typography variant="body2" color="text.secondary">Tidak ada notifikasi</Typography>
                   </Box>
-                </MenuItem>
-                <MenuItem onClick={handleNotificationMenuClose} sx={{ py: 2 }}>
-                  <Box>
-                    <Typography variant="body2" fontWeight={500}>Pengingat: Perijinan Anda akan berakhir besok</Typography>
-                    <Typography variant="caption" color="text.secondary">1 hari yang lalu</Typography>
+                ) : (
+                  <Box sx={{ maxHeight: '50vh', overflow: 'auto' }}>
+                    {notifications.map((notification) => (
+                      <MenuItem 
+                        key={notification.id} 
+                        onClick={() => handleNotificationClick(notification.id)} 
+                        sx={{ 
+                          py: 2,
+                          bgcolor: notification.isRead ? 'transparent' : 'action.hover',
+                          borderLeft: notification.isRead ? 'none' : `4px solid ${theme.palette.primary.main}`,
+                        }}
+                      >
+                        <Box>
+                          <Typography variant="body2" fontWeight={notification.isRead ? 400 : 600}>
+                            {notification.title}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                            {notification.message}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                            {formatRelativeTime(notification.createdAt)}
+                          </Typography>
+                        </Box>
+                      </MenuItem>
+                    ))}
                   </Box>
-                </MenuItem>
+                )}
+                
                 <Box sx={{ p: 1.5, borderTop: '1px solid', borderColor: 'divider', textAlign: 'center' }}>
-                  <Typography variant="body2" color="primary" sx={{ cursor: 'pointer', fontWeight: 500 }}>
+                  <Typography 
+                    variant="body2" 
+                    color="primary" 
+                    sx={{ cursor: 'pointer', fontWeight: 500 }}
+                    onClick={() => {
+                      handleNotificationMenuClose();
+                      // Tambahkan navigasi ke halaman notifikasi jika ada
+                    }}
+                  >
                     Lihat Semua Notifikasi
                   </Typography>
                 </Box>
