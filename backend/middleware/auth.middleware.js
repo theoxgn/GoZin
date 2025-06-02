@@ -16,6 +16,7 @@ const verifyToken = (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.userId = decoded.id;
+    req.userRole = decoded.role;
     next();
   } catch (error) {
     return res.status(401).json({ message: 'Token tidak valid atau kadaluarsa' });
