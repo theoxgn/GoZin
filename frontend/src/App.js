@@ -19,6 +19,11 @@ import CreatePermission from './pages/user/CreatePermission';
 import PermissionDetail from './pages/user/PermissionDetail';
 import Profile from './pages/user/Profile';
 import ChangePassword from './pages/user/ChangePassword';
+import Attendance from './pages/user/Attendance';
+import Payslip from './pages/user/Payslip';
+
+// Common Pages
+import PayslipDetail from './pages/common/PayslipDetail';
 
 // Approval Pages
 import ApprovalDashboard from './pages/approval/Dashboard';
@@ -27,6 +32,9 @@ import PendingPermissions from './pages/approval/PendingPermissions';
 // HRD Pages
 import HrdDashboard from './pages/hrd/Dashboard';
 import ApprovedByApprovalPermissions from './pages/hrd/PendingPermissions';
+import AttendanceReport from './pages/hrd/AttendanceReport';
+import AttendanceConfig from './pages/hrd/AttendanceConfig';
+import PayrollManagement from './pages/hrd/PayrollManagement';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/Dashboard';
@@ -73,6 +81,9 @@ function App() {
           <Route path="permissions/:id" element={<PermissionDetail />} />
           <Route path="profile" element={<Profile />} />
           <Route path="change-password" element={<ChangePassword />} />
+          <Route path="attendance" element={<Attendance />} />
+          <Route path="payslip" element={<Payslip />} />
+          <Route path="payslip/:id" element={<PayslipDetail />} />
 
           {/* Approval Routes */}
           {user && (user.role === 'approval' || user.role === 'admin') && (
@@ -87,6 +98,9 @@ function App() {
             <>
               <Route path="hrd" element={<HrdDashboard />} />
               <Route path="hrd/pending" element={<ApprovedByApprovalPermissions />} />
+              <Route path="hrd/attendance" element={<AttendanceReport />} />
+              <Route path="hrd/attendance-config" element={<AttendanceConfig />} />
+              <Route path="hrd/payroll" element={<PayrollManagement />} />
             </>
           )}
 

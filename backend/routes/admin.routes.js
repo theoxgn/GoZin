@@ -7,7 +7,7 @@ const { verifyToken, isAdmin } = require('../middleware/auth.middleware');
 router.get('/dashboard', verifyToken, isAdmin, adminController.getDashboardStats);
 
 // Route untuk mendapatkan daftar user dengan pagination
-router.get('/users', verifyToken, isAdmin, adminController.getAllUsers);
+router.get('/users', verifyToken, adminController.getAllUsers);
 
 // Route untuk mendapatkan semua konfigurasi perijinan
 router.get('/permission-configs', verifyToken, adminController.getAllPermissionConfigs);

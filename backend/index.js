@@ -12,6 +12,9 @@ const hrdRoutes = require('./routes/hrd.routes');
 const adminRoutes = require('./routes/admin.routes');
 const notificationRoutes = require('./routes/notification.routes');
 const quotaRoutes = require('./routes/quota.routes');
+const attendanceRoutes = require('./routes/attendance.routes');
+const payrollRoutes = require('./routes/payroll.routes');
+const attendanceConfigRoutes = require('./routes/attendance-config.routes');
 
 const app = express();
 
@@ -29,6 +32,9 @@ app.use('/api/hrd', hrdRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/quotas', quotaRoutes);
+app.use('/api/attendance', attendanceRoutes);
+app.use('/api/payroll', payrollRoutes);
+app.use('/api/attendance-config', attendanceConfigRoutes);
 
 // Root route
 app.get('/', (req, res) => {
@@ -49,16 +55,13 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   try {
     await sequelize.authenticate();
-    console.log('Database connection has been established successfully.');
-    
-    // Database sudah dimigrasi menggunakan sequelize-cli
-    console.log('Database ready');
+    console.log('Koneksi database berhasil.');
     
     app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
+      console.log(`Server berjalan di port ${PORT}`);
     });
   } catch (error) {
-    console.error('Unable to connect to the database:', error);
+    console.error('Tidak dapat terhubung ke database:', error);
   }
 };
 

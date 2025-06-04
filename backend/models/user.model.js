@@ -42,6 +42,16 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING(50),
       allowNull: true
     },
+    basicSalary: {
+      type: DataTypes.DECIMAL(15, 2),
+      allowNull: false,
+      defaultValue: 0
+    },
+    allowances: {
+      type: DataTypes.DECIMAL(15, 2),
+      allowNull: false,
+      defaultValue: 0
+    },
     role: {
       type: DataTypes.ENUM('user', 'approval', 'hrd', 'admin'),
       allowNull: false,

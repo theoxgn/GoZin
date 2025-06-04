@@ -42,6 +42,10 @@ import {
   VpnKey as VpnKeyIcon,
   Notifications as NotificationsIcon,
   ChevronLeft as ChevronLeftIcon,
+  AccessTime as AccessTimeIcon,
+  Receipt as ReceiptIcon,
+  MonetizationOn as MonetizationOnIcon,
+  AssessmentOutlined as AssessmentOutlinedIcon,
 } from '@mui/icons-material';
 
 const drawerWidth = 260;
@@ -134,6 +138,8 @@ function MainLayout() {
       { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
       { text: 'Daftar Perijinan', icon: <ListAltIcon />, path: '/permissions' },
       { text: 'Buat Perijinan', icon: <AddIcon />, path: '/permissions/create' },
+      { text: 'Absensi', icon: <AccessTimeIcon />, path: '/attendance' },
+      { text: 'Slip Gaji', icon: <ReceiptIcon />, path: '/payslip' },
     ] : []),
     
     // Divider for role-specific menus
@@ -149,6 +155,9 @@ function MainLayout() {
     ...(user && user.role === 'hrd' ? [
       { text: 'HRD Dashboard', icon: <BusinessIcon />, path: '/hrd' },
       { text: 'Perijinan Disetujui Approval', icon: <ListAltIcon />, path: '/hrd/pending' },
+      { text: 'Laporan Absensi', icon: <AssessmentOutlinedIcon />, path: '/hrd/attendance' },
+      { text: 'Konfigurasi Absensi', icon: <SettingsIcon />, path: '/hrd/attendance-config' },
+      { text: 'Manajemen Penggajian', icon: <MonetizationOnIcon />, path: '/hrd/payroll' },
     ] : []),
     
     // Admin Menu Items
