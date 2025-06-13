@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import axios from 'axios';
+import api from '../../services/api';
 import {
   Box,
   Button,
@@ -64,17 +64,12 @@ function Attendance() {
   const fetchAttendanceData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      
       // Fetch today's attendance
-      const todayResponse = await axios.get('/api/attendance/today', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const todayResponse = await api.get('/api/attendance/today');
       setTodayAttendance(todayResponse.data);
       
       // Fetch attendance history
-      const historyResponse = await axios.get('/api/attendance/history', {
-        headers: { Authorization: `Bearer ${token}` },
+      const historyResponse = await api.get('/api/attendance/history', {
         params: { page: 1, limit: 5 },
       });
       setAttendanceHistory(historyResponse.data.attendances || []);
@@ -90,9 +85,7 @@ function Attendance() {
 
   const fetchAttendanceConfig = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('/api/attendance-config/active', {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await api.get('/api/attendance-config/active', {
         params: { departmentId: user.departmentId },
       });
       setAttendanceConfig(response.data);
@@ -106,11 +99,9 @@ function Attendance() {
     
     setHistoryLoading(true);
     try {
-      const token = localStorage.getItem('token');
       const nextPage = historyPage + 1;
       
-      const response = await axios.get('/api/attendance/history', {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await api.get('/api/attendance/history', {
         params: { page: nextPage, limit: 5 },
       });
       
@@ -195,7 +186,6 @@ function Attendance() {
     
     setClockInLoading(true);
     try {
-      const token = localStorage.getItem('token');
       const payload = {
         clockInPhoto: photoData,
         latitude: location?.latitude || null,
@@ -203,9 +193,7 @@ function Attendance() {
         notes: notes,
       };
       
-      const response = await axios.post('/api/attendance/clock-in', payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.post('/api/attendance/clock-in', payload);
       
       setTodayAttendance(response.data);
       handleCloseCamera();
@@ -234,7 +222,6 @@ function Attendance() {
     
     setClockOutLoading(true);
     try {
-      const token = localStorage.getItem('token');
       const payload = {
         clockOutPhoto: photoData,
         latitude: location?.latitude || null,
@@ -242,9 +229,7 @@ function Attendance() {
         notes: notes,
       };
       
-      const response = await axios.post('/api/attendance/clock-out', payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.post('/api/attendance/clock-out', payload);
       
       setTodayAttendance(response.data);
       handleCloseCamera();

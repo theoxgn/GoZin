@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import api from '../../services/api';
 import {
   Box,
   Button,
@@ -40,6 +41,7 @@ import {
 function Payslip() {
   const { user } = useAuth();
   const theme = useTheme();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [payrollHistory, setPayrollHistory] = useState([]);
@@ -65,9 +67,7 @@ function Payslip() {
   const fetchPayrollHistory = async (year) => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('/api/payroll/history', {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await api.get('/api/payroll/history', {
         params: { year },
       });
       setPayrollHistory(response.data.payrolls || []);
@@ -86,22 +86,8 @@ function Payslip() {
     fetchPayrollHistory(year);
   };
 
-  const handleViewPayslip = async (payrollId) => {
-    setPayslipLoading(true);
-    setSelectedPayroll(payrollId);
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`/api/payroll/slip/${payrollId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setPayslipData(response.data);
-      setPayslipError('');
-    } catch (err) {
-      console.error('Error fetching payslip:', err);
-      setPayslipError('Gagal memuat slip gaji');
-    } finally {
-      setPayslipLoading(false);
-    }
+  const handleViewPayslip = (payrollId) => {
+    navigate(`/payslip/${payrollId}`);
   };
 
   const handlePrintPayslip = () => {
@@ -327,7 +313,7 @@ function Payslip() {
                               size="small"
                               variant="outlined"
                               onClick={() => handleViewPayslip(payroll.id)}
-                              disabled={payslipLoading || payroll.status === 'draft'}
+                              disabled={payroll.status === 'draft'}
                             >
                               Lihat
                             </Button>

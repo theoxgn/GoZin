@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { useAuth } from './AuthContext';
 
 const NotificationContext = createContext();
@@ -21,10 +21,7 @@ export const NotificationProvider = ({ children }) => {
       setLoading(true);
       setError('');
       
-      const token = localStorage.getItem('token');
-      const response = await axios.get('/api/notifications', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/api/notifications');
       
       setNotifications(response.data.notifications);
       setUnreadCount(response.data.unreadCount);
@@ -39,10 +36,7 @@ export const NotificationProvider = ({ children }) => {
   // Fungsi untuk menandai notifikasi sebagai telah dibaca
   const markAsRead = async (notificationId) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.put(`/api/notifications/${notificationId}/read`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.put(`/api/notifications/${notificationId}/read`, {});
       
       // Update state lokal
       setNotifications(prevNotifications => 
@@ -63,10 +57,7 @@ export const NotificationProvider = ({ children }) => {
   // Fungsi untuk menandai semua notifikasi sebagai telah dibaca
   const markAllAsRead = async () => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.put('/api/notifications/read-all', {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.put('/api/notifications/read-all', {});
       
       // Update state lokal
       setNotifications(prevNotifications => 
@@ -83,10 +74,7 @@ export const NotificationProvider = ({ children }) => {
   // Fungsi untuk menghapus notifikasi
   const deleteNotification = async (notificationId) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`/api/notifications/${notificationId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.delete(`/api/notifications/${notificationId}`);
       
       // Update state lokal
       const deletedNotification = notifications.find(n => n.id === notificationId);

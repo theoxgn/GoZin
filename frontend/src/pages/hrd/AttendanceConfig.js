@@ -24,7 +24,7 @@ import {
   Snackbar,
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
-import axios from 'axios';
+import api from '../../services/api';
 
 function AttendanceConfig() {
   const [configs, setConfigs] = useState([]);
@@ -54,11 +54,8 @@ function AttendanceConfig() {
 
   const fetchConfigs = async () => {
 
-    const token = localStorage.getItem('token');
     try {
-      const response = await axios.get('/api/attendance-config', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get('/api/attendance-config');
       setConfigs(response.data.configs);
     } catch (error) {
       console.error('Error fetching configs:', error);
@@ -107,17 +104,12 @@ function AttendanceConfig() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem('token');
     try {
       if (editingConfig) {
-        await axios.put(`/api/attendance-config/${editingConfig.id}`, formData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await api.put(`/api/attendance-config/${editingConfig.id}`, formData);
         showSnackbar('Konfigurasi absensi berhasil diperbarui');
       } else {
-        await axios.post('/api/attendance-config', formData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await api.post('/api/attendance-config', formData);
         showSnackbar('Konfigurasi absensi berhasil dibuat');
       }
       handleCloseDialog();
@@ -130,12 +122,9 @@ function AttendanceConfig() {
 
   const handleDelete = async (id) => {
 
-    const token = localStorage.getItem('token');
     if (window.confirm('Apakah Anda yakin ingin menghapus konfigurasi ini?')) {
       try {
-        await axios.delete(`/api/attendance-config/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await api.delete(`/api/attendance-config/${id}`);
         showSnackbar('Konfigurasi absensi berhasil dihapus');
         fetchConfigs();
       } catch (error) {

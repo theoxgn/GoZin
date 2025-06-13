@@ -1,9 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { toast } from 'react-toastify';
-
-
-axios.defaults.baseURL = process.env.REACT_APP_API_URL;
 
 const AuthContext = createContext();
 
@@ -32,11 +29,7 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      const response = await axios.get('/api/auth/profile', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await api.get('/api/auth/profile');
 
       if (response.data && response.data.user) {
         setUser(response.data.user);
@@ -57,7 +50,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post('/api/auth/login', { email, password });
+      const response = await api.post('/api/auth/login', { email, password });
       const { token, user } = response.data;
 
       localStorage.setItem('token', token);
@@ -74,7 +67,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      const response = await axios.post('/api/auth/register', userData);
+      const response = await api.post('/api/auth/register', userData);
       toast.success('Registrasi berhasil! Silakan login.');
       return true;
     } catch (error) {
@@ -93,15 +86,9 @@ export const AuthProvider = ({ children }) => {
 
   const changePassword = async (currentPassword, newPassword) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(
+      await api.post(
         '/api/auth/change-password',
-        { currentPassword, newPassword },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { currentPassword, newPassword }
       );
       toast.success('Password berhasil diubah!');
       return true;
@@ -115,15 +102,9 @@ export const AuthProvider = ({ children }) => {
 
   const updateProfile = async (userData) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.put(
+      const response = await api.put(
         `/api/users/${user.id}`,
-        userData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        userData
       );
       
       setUser({ ...user, ...response.data });

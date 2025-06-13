@@ -1,53 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../services/api';
 import {
   Box,
   Button,
   Card,
   CardContent,
   CircularProgress,
+  Container,
   Divider,
   Grid,
   Paper,
   Typography,
   Alert,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Stack,
-  Chip,
+  useTheme,
+  IconButton,
 } from '@mui/material';
 import {
   Print as PrintIcon,
+  Download as DownloadIcon,
   ArrowBack as ArrowBackIcon,
-  CalendarMonth as CalendarMonthIcon,
-  Person as PersonIcon,
-  Business as BusinessIcon,
-  Badge as BadgeIcon,
-  Email as EmailIcon,
-  Phone as PhoneIcon,
-  AccountBalance as AccountBalanceIcon,
-  CreditCard as CreditCardIcon,
-  Receipt as ReceiptIcon,
-  MonetizationOn as MonetizationOnIcon,
-  RemoveCircle as RemoveCircleIcon,
-  AddCircle as AddCircleIcon,
 } from '@mui/icons-material';
-import { useReactToPrint } from 'react-to-print';
-import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
 
 function PayslipDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const theme = useTheme();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [payslip, setPayslip] = useState(null);
-  const printRef = React.useRef();
+  const [payslipData, setPayslipData] = useState(null);
 
   useEffect(() => {
     fetchPayslipData();
@@ -56,32 +38,138 @@ function PayslipDetail() {
   const fetchPayslipData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`/api/payroll/slip/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      
-      setPayslip(response.data);
+      const response = await api.get(`/api/payroll/slip/${id}`);
+      setPayslipData(response.data.payslip);
       setError('');
     } catch (err) {
-      console.error('Error fetching payslip data:', err);
-      setError('Gagal memuat data slip gaji');
+      console.error('Error fetching payslip:', err);
+      setError('Gagal memuat slip gaji');
     } finally {
       setLoading(false);
     }
   };
 
-  const handlePrint = useReactToPrint({
-    content: () => printRef.current,
-    documentTitle: `Slip_Gaji_${payslip?.user?.name || 'Karyawan'}_${payslip?.month || ''}_${payslip?.year || ''}`,
-  });
+  const handlePrintPayslip = () => {
+    if (!payslipData) return;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Slip Gaji - ${payslipData.month}/${payslipData.year}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+            .header { text-align: center; margin-bottom: 20px; }
+            .company-name { font-size: 20px; font-weight: bold; }
+            .payslip-title { font-size: 18px; margin: 10px 0; }
+            .employee-info { margin-bottom: 20px; }
+            .info-row { display: flex; margin-bottom: 5px; }
+            .info-label { width: 150px; font-weight: bold; }
+            .info-value { flex: 1; }
+            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; }
+            .total-row { font-weight: bold; }
+            .footer { margin-top: 30px; text-align: center; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="company-name">PT. Nama Perusahaan</div>
+            <div class="payslip-title">SLIP GAJI KARYAWAN</div>
+            <div>${payslipData.month}/${payslipData.year}</div>
+          </div>
+          
+          <div class="employee-info">
+            <div class="info-row">
+              <div class="info-label">Nama Karyawan:</div>
+              <div class="info-value">${payslipData.employeeName}</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Departemen:</div>
+              <div class="info-value">${payslipData.department}</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Jabatan:</div>
+              <div class="info-value">${payslipData.position}</div>
+            </div>
+          </div>
+          
+          <table>
+            <tr>
+              <th colspan="2">RINCIAN PENDAPATAN</th>
+            </tr>
+            <tr>
+              <td>Gaji Pokok</td>
+              <td>Rp ${parseFloat(payslipData.earnings.basicSalary).toLocaleString('id-ID')}</td>
+            </tr>
+            <tr>
+              <td>Tunjangan</td>
+              <td>Rp ${parseFloat(payslipData.earnings.allowances).toLocaleString('id-ID')}</td>
+            </tr>
+            <tr>
+              <td>Lembur</td>
+              <td>Rp ${parseFloat(payslipData.earnings.overtime).toLocaleString('id-ID')}</td>
+            </tr>
+            <tr class="total-row">
+              <td>Total Pendapatan</td>
+              <td>Rp ${parseFloat(payslipData.earnings.totalEarnings).toLocaleString('id-ID')}</td>
+            </tr>
+          </table>
+          
+          <table>
+            <tr>
+              <th colspan="2">RINCIAN POTONGAN</th>
+            </tr>
+            <tr>
+              <td>Potongan Absensi/Keterlambatan</td>
+              <td>Rp ${parseFloat(payslipData.deductions.lateAndAbsent).toLocaleString('id-ID')}</td>
+            </tr>
+            <tr>
+              <td>BPJS Kesehatan</td>
+              <td>Rp ${parseFloat(payslipData.deductions.bpjsKesehatan).toLocaleString('id-ID')}</td>
+            </tr>
+            <tr>
+              <td>BPJS Ketenagakerjaan</td>
+              <td>Rp ${parseFloat(payslipData.deductions.bpjsKetenagakerjaan).toLocaleString('id-ID')}</td>
+            </tr>
+            <tr>
+              <td>PPh 21</td>
+              <td>Rp ${parseFloat(payslipData.deductions.pph21).toLocaleString('id-ID')}</td>
+            </tr>
+            <tr class="total-row">
+              <td>Total Potongan</td>
+              <td>Rp ${parseFloat(payslipData.deductions.totalDeductions).toLocaleString('id-ID')}</td>
+            </tr>
+          </table>
+          
+          <table>
+            <tr>
+              <th>GAJI BERSIH</th>
+              <th>Rp ${parseFloat(payslipData.netSalary).toLocaleString('id-ID')}</th>
+            </tr>
+          </table>
+          
+          <div class="footer">
+            <p>Slip gaji ini dihasilkan secara otomatis oleh sistem.</p>
+            ${payslipData.notes ? `<p>Catatan: ${payslipData.notes}</p>` : ''}
+          </div>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+    }, 500);
+  };
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
       minimumFractionDigits: 0,
-    }).format(amount || 0);
+    }).format(parseFloat(amount) || 0);
   };
 
   const formatMonthYear = (month, year) => {
@@ -92,362 +180,201 @@ function PayslipDetail() {
     return `${monthNames[month - 1]} ${year}`;
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '-';
-    try {
-      return format(new Date(dateString), 'dd MMMM yyyy', { locale: id });
-    } catch (error) {
-      return dateString;
-    }
-  };
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
-  const getStatusChip = (status) => {
-    switch (status) {
-      case 'draft':
-        return <Chip label="Draft" color="default" size="small" />;
-      case 'processed':
-        return <Chip label="Diproses" color="primary" size="small" />;
-      case 'paid':
-        return <Chip label="Dibayar" color="success" size="small" />;
-      default:
-        return <Chip label={status} color="default" size="small" />;
+  if (error) {
+    return (
+      <Container maxWidth="md" sx={{ mt: 4 }}>
+        <Alert severity="error">{error}</Alert>
+      </Container>
+    );
+  }
+
+  if (!payslipData) {
+    return (
+      <Container maxWidth="md" sx={{ mt: 4 }}>
+        <Alert severity="warning">Data slip gaji tidak ditemukan</Alert>
+      </Container>
+    );
     }
-  };
 
   return (
-    <Box sx={{ py: 2 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+    <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Button
           startIcon={<ArrowBackIcon />}
           onClick={() => navigate(-1)}
         >
           Kembali
         </Button>
+        <Stack direction="row" spacing={1}>
         <Button
-          variant="contained"
+            variant="outlined"
           startIcon={<PrintIcon />}
-          onClick={handlePrint}
-          disabled={loading || !!error}
+            onClick={handlePrintPayslip}
         >
-          Cetak Slip Gaji
+            Cetak
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<DownloadIcon />}
+            onClick={handlePrintPayslip}
+          >
+            Download PDF
         </Button>
+        </Stack>
       </Box>
 
-      {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-          <CircularProgress />
-        </Box>
-      ) : error ? (
-        <Alert severity="error" sx={{ m: 2 }}>{error}</Alert>
-      ) : (
-        <Box ref={printRef} sx={{ p: 2, bgcolor: 'background.paper' }}>
-          {/* Payslip Header */}
-          <Box sx={{ textAlign: 'center', mb: 3 }}>
-            <Typography variant="h4" component="h1" gutterBottom>
+      <Paper sx={{ p: 3 }}>
+        <Box sx={{ textAlign: 'center', mb: 4 }}>
+          <Typography variant="h5" component="h1" gutterBottom>
+            PT. Nama Perusahaan
+          </Typography>
+          <Typography variant="h6" gutterBottom>
               SLIP GAJI KARYAWAN
             </Typography>
-            <Typography variant="h6" component="h2" gutterBottom>
-              PT. NAMA PERUSAHAAN
-            </Typography>
-            <Typography variant="body1" gutterBottom>
-              Jl. Contoh Alamat No. 123, Jakarta Selatan
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Periode: {formatMonthYear(payslip.month, payslip.year)}
+          <Typography variant="subtitle1">
+            {formatMonthYear(payslipData.month, payslipData.year)}
             </Typography>
           </Box>
 
-          <Divider sx={{ mb: 3 }} />
-
-          {/* Employee Information */}
-          <Paper elevation={0} sx={{ p: 2, mb: 3, border: '1px solid #e0e0e0' }}>
-            <Typography variant="h6" component="h3" gutterBottom>
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <Card variant="outlined">
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
               Informasi Karyawan
             </Typography>
             <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
-                <Stack spacing={1}>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <PersonIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                    <Typography variant="body2" component="span" sx={{ width: 120 }}>Nama</Typography>
-                    <Typography variant="body1" component="span" sx={{ fontWeight: 'medium' }}>
-                      {payslip.user?.name || '-'}
+                  <Grid item xs={12} sm={6}>
+                    <Typography variant="body2" color="text.secondary">
+                      Nama Karyawan
                     </Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <BadgeIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                    <Typography variant="body2" component="span" sx={{ width: 120 }}>NIP</Typography>
-                    <Typography variant="body1" component="span">
-                      {payslip.user?.employeeId || '-'}
+                    <Typography variant="body1">
+                      {payslipData.employeeName}
                     </Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <BusinessIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                    <Typography variant="body2" component="span" sx={{ width: 120 }}>Departemen</Typography>
-                    <Typography variant="body1" component="span">
-                      {payslip.user?.department?.name || '-'}
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Typography variant="body2" color="text.secondary">
+                      Departemen
                     </Typography>
-                  </Box>
-                </Stack>
+                    <Typography variant="body1">
+                      {payslipData.department}
+                    </Typography>
               </Grid>
-              <Grid item xs={12} md={6}>
-                <Stack spacing={1}>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <EmailIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                    <Typography variant="body2" component="span" sx={{ width: 120 }}>Email</Typography>
-                    <Typography variant="body1" component="span">
-                      {payslip.user?.email || '-'}
+                  <Grid item xs={12} sm={6}>
+                    <Typography variant="body2" color="text.secondary">
+                      Jabatan
                     </Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <PhoneIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                    <Typography variant="body2" component="span" sx={{ width: 120 }}>Telepon</Typography>
-                    <Typography variant="body1" component="span">
-                      {payslip.user?.phone || '-'}
+                    <Typography variant="body1">
+                      {payslipData.position}
                     </Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <AccountBalanceIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                    <Typography variant="body2" component="span" sx={{ width: 120 }}>Bank</Typography>
-                    <Typography variant="body1" component="span">
-                      {payslip.user?.bankName || '-'}
-                    </Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <CreditCardIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                    <Typography variant="body2" component="span" sx={{ width: 120 }}>No. Rekening</Typography>
-                    <Typography variant="body1" component="span">
-                      {payslip.user?.bankAccount || '-'}
-                    </Typography>
-                  </Box>
-                </Stack>
-              </Grid>
-            </Grid>
-          </Paper>
-
-          {/* Payroll Information */}
-          <Paper elevation={0} sx={{ p: 2, mb: 3, border: '1px solid #e0e0e0' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6" component="h3">
-                Informasi Penggajian
-              </Typography>
-              <Box>
-                {getStatusChip(payslip.status)}
-              </Box>
-            </Box>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
-                <Stack spacing={1}>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <CalendarMonthIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                    <Typography variant="body2" component="span" sx={{ width: 160 }}>Periode</Typography>
-                    <Typography variant="body1" component="span">
-                      {formatMonthYear(payslip.month, payslip.year)}
-                    </Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <ReceiptIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                    <Typography variant="body2" component="span" sx={{ width: 160 }}>Nomor Slip</Typography>
-                    <Typography variant="body1" component="span">
-                      {payslip.payslipNumber || `-`}
-                    </Typography>
-                  </Box>
-                </Stack>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <Stack spacing={1}>
-                  {payslip.paymentDate && (
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <CalendarMonthIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                      <Typography variant="body2" component="span" sx={{ width: 160 }}>Tanggal Pembayaran</Typography>
-                      <Typography variant="body1" component="span">
-                        {formatDate(payslip.paymentDate)}
-                      </Typography>
-                    </Box>
-                  )}
-                  {payslip.notes && (
-                    <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
-                      <ReceiptIcon sx={{ mr: 1, mt: 0.5, color: 'text.secondary' }} />
-                      <Typography variant="body2" component="span" sx={{ width: 160 }}>Catatan</Typography>
-                      <Typography variant="body1" component="span">
-                        {payslip.notes}
-                      </Typography>
-                    </Box>
-                  )}
-                </Stack>
-              </Grid>
-            </Grid>
-          </Paper>
-
-          {/* Attendance Summary */}
-          <Paper elevation={0} sx={{ p: 2, mb: 3, border: '1px solid #e0e0e0' }}>
-            <Typography variant="h6" component="h3" gutterBottom>
-              Ringkasan Kehadiran
-            </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={6} sm={3}>
-                <Box sx={{ textAlign: 'center', p: 1 }}>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    Hari Kerja
-                  </Typography>
-                  <Typography variant="h6" component="div">
-                    {payslip.workingDays || 0}
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={6} sm={3}>
-                <Box sx={{ textAlign: 'center', p: 1 }}>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    Hadir
-                  </Typography>
-                  <Typography variant="h6" component="div" color="success.main">
-                    {payslip.presentDays || 0}
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={6} sm={3}>
-                <Box sx={{ textAlign: 'center', p: 1 }}>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    Terlambat
-                  </Typography>
-                  <Typography variant="h6" component="div" color="warning.main">
-                    {payslip.lateDays || 0}
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={6} sm={3}>
-                <Box sx={{ textAlign: 'center', p: 1 }}>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    Tidak Hadir
-                  </Typography>
-                  <Typography variant="h6" component="div" color="error.main">
-                    {payslip.absentDays || 0}
-                  </Typography>
-                </Box>
-              </Grid>
-            </Grid>
-          </Paper>
-
-          {/* Salary Details */}
-          <Grid container spacing={3}>
-            {/* Earnings */}
-            <Grid item xs={12} md={6}>
-              <Paper elevation={0} sx={{ p: 2, height: '100%', border: '1px solid #e0e0e0' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <AddCircleIcon sx={{ mr: 1, color: 'success.main' }} />
-                  <Typography variant="h6" component="h3">
-                    Pendapatan
-                  </Typography>
-                </Box>
-                <TableContainer>
-                  <Table size="small">
-                    <TableBody>
-                      <TableRow>
-                        <TableCell>Gaji Pokok</TableCell>
-                        <TableCell align="right">{formatCurrency(payslip.basicSalary)}</TableCell>
-                      </TableRow>
-                      {payslip.allowances && payslip.allowances.map((allowance, index) => (
-                        <TableRow key={index}>
-                          <TableCell>{allowance.name}</TableCell>
-                          <TableCell align="right">{formatCurrency(allowance.amount)}</TableCell>
-                        </TableRow>
-                      ))}
-                      <TableRow>
-                        <TableCell>Tunjangan Lainnya</TableCell>
-                        <TableCell align="right">{formatCurrency(payslip.otherAllowances)}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Bonus</TableCell>
-                        <TableCell align="right">{formatCurrency(payslip.bonus)}</TableCell>
-                      </TableRow>
-                      <TableRow sx={{ '& td': { fontWeight: 'bold', borderTop: '1px solid rgba(224, 224, 224, 1)' } }}>
-                        <TableCell>Total Pendapatan</TableCell>
-                        <TableCell align="right">{formatCurrency(payslip.totalEarnings)}</TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </Paper>
-            </Grid>
-
-            {/* Deductions */}
-            <Grid item xs={12} md={6}>
-              <Paper elevation={0} sx={{ p: 2, height: '100%', border: '1px solid #e0e0e0' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <RemoveCircleIcon sx={{ mr: 1, color: 'error.main' }} />
-                  <Typography variant="h6" component="h3">
-                    Potongan
-                  </Typography>
-                </Box>
-                <TableContainer>
-                  <Table size="small">
-                    <TableBody>
-                      <TableRow>
-                        <TableCell>Potongan Keterlambatan</TableCell>
-                        <TableCell align="right">{formatCurrency(payslip.lateDeduction)}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Potongan Ketidakhadiran</TableCell>
-                        <TableCell align="right">{formatCurrency(payslip.absentDeduction)}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>BPJS Kesehatan</TableCell>
-                        <TableCell align="right">{formatCurrency(payslip.bpjsKesehatan)}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>BPJS Ketenagakerjaan</TableCell>
-                        <TableCell align="right">{formatCurrency(payslip.bpjsKetenagakerjaan)}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>PPh 21</TableCell>
-                        <TableCell align="right">{formatCurrency(payslip.tax)}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Potongan Lainnya</TableCell>
-                        <TableCell align="right">{formatCurrency(payslip.otherDeductions)}</TableCell>
-                      </TableRow>
-                      <TableRow sx={{ '& td': { fontWeight: 'bold', borderTop: '1px solid rgba(224, 224, 224, 1)' } }}>
-                        <TableCell>Total Potongan</TableCell>
-                        <TableCell align="right">{formatCurrency(payslip.totalDeductions)}</TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </Paper>
-            </Grid>
+                  </Grid>
+                </Grid>
+              </CardContent>
+            </Card>
           </Grid>
 
-          {/* Net Salary */}
-          <Paper elevation={0} sx={{ p: 2, mt: 3, mb: 3, bgcolor: '#f9f9f9', border: '1px solid #e0e0e0' }}>
-            <Grid container alignItems="center">
-              <Grid item xs={12} md={6}>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <MonetizationOnIcon sx={{ mr: 1, color: 'primary.main', fontSize: 28 }} />
-                  <Typography variant="h6" component="h3">
+          <Grid item xs={12} md={6}>
+            <Card variant="outlined">
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Rincian Pendapatan
+                </Typography>
+                <Stack spacing={2}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography>Gaji Pokok</Typography>
+                    <Typography>{formatCurrency(payslipData.earnings.basicSalary)}</Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography>Tunjangan</Typography>
+                    <Typography>{formatCurrency(payslipData.earnings.allowances)}</Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography>Lembur</Typography>
+                    <Typography>{formatCurrency(payslipData.earnings.overtime)}</Typography>
+                  </Box>
+                  <Divider />
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography fontWeight="bold">Total Pendapatan</Typography>
+                    <Typography fontWeight="bold">{formatCurrency(payslipData.earnings.totalEarnings)}</Typography>
+                  </Box>
+                </Stack>
+              </CardContent>
+            </Card>
+            </Grid>
+
+          <Grid item xs={12} md={6}>
+            <Card variant="outlined">
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Rincian Potongan
+              </Typography>
+                <Stack spacing={2}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography>Potongan Absensi/Keterlambatan</Typography>
+                    <Typography>{formatCurrency(payslipData.deductions.lateAndAbsent)}</Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography>BPJS Kesehatan</Typography>
+                    <Typography>{formatCurrency(payslipData.deductions.bpjsKesehatan)}</Typography>
+              </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography>BPJS Ketenagakerjaan</Typography>
+                    <Typography>{formatCurrency(payslipData.deductions.bpjsKetenagakerjaan)}</Typography>
+            </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography>PPh 21</Typography>
+                    <Typography>{formatCurrency(payslipData.deductions.pph21)}</Typography>
+                  </Box>
+                  <Divider />
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography fontWeight="bold">Total Potongan</Typography>
+                    <Typography fontWeight="bold">{formatCurrency(payslipData.deductions.totalDeductions)}</Typography>
+                  </Box>
+                </Stack>
+              </CardContent>
+            </Card>
+            </Grid>
+
+          <Grid item xs={12}>
+            <Card variant="outlined" sx={{ bgcolor: theme.palette.primary.light }}>
+              <CardContent>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="h6" color="primary">
                     Gaji Bersih
                   </Typography>
+                  <Typography variant="h5" color="primary" fontWeight="bold">
+                    {formatCurrency(payslipData.netSalary)}
+                  </Typography>
                 </Box>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <Typography variant="h5" component="div" align="right" sx={{ fontWeight: 'bold' }}>
-                  {formatCurrency(payslip.netSalary)}
-                </Typography>
-              </Grid>
+              </CardContent>
+            </Card>
+            </Grid>
+
+          {payslipData.notes && (
+            <Grid item xs={12}>
+              <Card variant="outlined">
+                <CardContent>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Catatan
+                  </Typography>
+                  <Typography variant="body2">
+                    {payslipData.notes}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          )}
             </Grid>
           </Paper>
-
-          {/* Footer */}
-          <Box sx={{ mt: 4, textAlign: 'center' }}>
-            <Typography variant="body2" color="text.secondary">
-              Slip gaji ini dihasilkan secara otomatis oleh sistem dan tidak memerlukan tanda tangan.
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Jika ada pertanyaan mengenai slip gaji ini, silakan hubungi departemen HRD.
-            </Typography>
-          </Box>
-        </Box>
-      )}
-    </Box>
+    </Container>
   );
 }
 

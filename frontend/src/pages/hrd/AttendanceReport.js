@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 import {
   Box,
   Button,
@@ -82,8 +82,6 @@ function AttendanceReport() {
   const fetchAttendanceData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      
       const params = {
         page: page + 1,
         limit: rowsPerPage,
@@ -99,8 +97,7 @@ function AttendanceReport() {
       if (params.startDate) params.startDate = params.startDate.toISOString();
       if (params.endDate) params.endDate = params.endDate.toISOString();
       
-      const response = await axios.get('/api/attendance/report', {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await api.get('/api/attendance/report', {
         params,
       });
       
@@ -118,8 +115,6 @@ function AttendanceReport() {
   const fetchAttendanceStats = async () => {
     setStatsLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      
       const params = { ...filters };
       
       // Add userId to params if a user is selected
@@ -131,8 +126,7 @@ function AttendanceReport() {
       if (params.startDate) params.startDate = params.startDate.toISOString();
       if (params.endDate) params.endDate = params.endDate.toISOString();
       
-      const response = await axios.get('/api/attendance/stats', {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await api.get('/api/attendance/stats', {
         params,
       });
       
@@ -152,10 +146,7 @@ function AttendanceReport() {
 
   const fetchDepartments = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('/api/admin/departments', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get('/api/admin/departments');
       setDepartments(response.data || []);
     } catch (err) {
       console.error('Error fetching departments:', err);
@@ -164,10 +155,7 @@ function AttendanceReport() {
 
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('/api/admin/users', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get('/api/admin/users');
       setUsers(response.data || []);
     } catch (err) {
       console.error('Error fetching users:', err);
@@ -210,8 +198,6 @@ function AttendanceReport() {
 
   const handleExportToExcel = async () => {
     try {
-      const token = localStorage.getItem('token');
-      
       const params = { ...filters, export: true };
       
       // Add userId to params if a user is selected
@@ -223,8 +209,7 @@ function AttendanceReport() {
       if (params.startDate) params.startDate = params.startDate.toISOString();
       if (params.endDate) params.endDate = params.endDate.toISOString();
       
-      const response = await axios.get('/api/attendance/export', {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await api.get('/api/attendance/export', {
         params,
         responseType: 'blob',
       });

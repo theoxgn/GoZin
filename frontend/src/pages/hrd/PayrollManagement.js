@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 import {
   Box,
   Button,
@@ -137,8 +137,6 @@ function PayrollManagement() {
   const fetchPayrollData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      
       const params = {
         page: page + 1,
         limit: rowsPerPage,
@@ -150,8 +148,7 @@ function PayrollManagement() {
         params.userId = selectedUser.id;
       }
       
-      const response = await axios.get('/api/payroll', {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await api.get('/api/payroll', {
         params,
       });
       
@@ -169,8 +166,6 @@ function PayrollManagement() {
   const fetchPayrollStats = async () => {
     setStatsLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      
       const params = { ...filters };
       
       // Add userId to params if a user is selected
@@ -178,8 +173,7 @@ function PayrollManagement() {
         params.userId = selectedUser.id;
       }
       
-      const response = await axios.get('/api/payroll/stats', {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await api.get('/api/payroll/stats', {
         params,
       });
       
@@ -198,10 +192,7 @@ function PayrollManagement() {
 
   const fetchDepartments = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('/api/admin/departments', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get('/api/admin/departments');
       setDepartments(response.data || []);
     } catch (err) {
       console.error('Error fetching departments:', err);
@@ -210,11 +201,8 @@ function PayrollManagement() {
 
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem('token');
       // console.log('Fetching users from /api/admin/users...'); // Log step 1
-      const response = await axios.get('/api/admin/users', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get('/api/admin/users');
       // console.log('API Response Data:', response.data); // Log step 2: raw data
 
       // Access the users array from the response data
@@ -285,8 +273,6 @@ function PayrollManagement() {
 
   const handleExportToExcel = async () => {
     try {
-      const token = localStorage.getItem('token');
-      
       const params = { ...filters, export: true };
       
       // Add userId to params if a user is selected
@@ -294,8 +280,7 @@ function PayrollManagement() {
         params.userId = selectedUser.id;
       }
       
-      const response = await axios.get('/api/payroll/export', {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await api.get('/api/payroll/export', {
         params,
         responseType: 'blob',
       });
@@ -329,16 +314,12 @@ function PayrollManagement() {
     setError('');
 
     try {
-      const token = localStorage.getItem('token');
-      
-      const response = await axios.post('http://localhost:3001/api/payroll/calculate', {
+      const response = await api.post('http://localhost:3001/api/payroll/calculate', {
         userId: selectedUserForCalculation.id,
         month: parseInt(calculateMonth),
         year: parseInt(calculateYear),
         basicSalary: selectedUserForCalculation.basicSalary || 0,
         allowances: selectedUserForCalculation.allowances || 0
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
 
       // Refresh data after successful calculation
@@ -363,10 +344,7 @@ function PayrollManagement() {
     
     setProcessLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      await axios.put(`http://localhost:3001/api/payroll/process/${selectedPayrollId}`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.put(`http://localhost:3001/api/payroll/process/${selectedPayrollId}`, {});
       
       setProcessDialogOpen(false);
       alert('Gaji berhasil diproses');
@@ -385,12 +363,9 @@ function PayrollManagement() {
     
     setPayLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      await axios.put(`http://localhost:3001/api/payroll/pay/${selectedPayrollId}`, {
+      await api.put(`http://localhost:3001/api/payroll/pay/${selectedPayrollId}`, {
         paymentDate: paymentDate.toISOString(),
         notes: paymentNotes,
-      }, {
-        headers: { Authorization: `Bearer ${token}` },
       });
       
       setPayDialogOpen(false);
