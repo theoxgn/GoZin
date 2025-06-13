@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   Box,
@@ -51,65 +51,75 @@ function UserDashboard() {
   const theme = useTheme();
 
   useEffect(() => {
+    let isMounted = true;
     const fetchDashboardData = async () => {
       try {
-        const token = localStorage.getItem('token');
-        
         // Fetch recent permissions
-        const recentResponse = await axios.get('/api/permissions', {
-          headers: { Authorization: `Bearer ${token}` },
+        const recentResponse = await api.get('/api/permissions', {
           params: { limit: 5, sort: 'createdAt,desc' }
         });
         
         // Fetch counts by status
-        const pendingResponse = await axios.get('/api/permissions', {
-          headers: { Authorization: `Bearer ${token}` },
+        const pendingResponse = await api.get('/api/permissions', {
           params: { status: 'pending', count: true }
         });
         
-        const approvedResponse = await axios.get('/api/permissions', {
-          headers: { Authorization: `Bearer ${token}` },
+        const approvedResponse = await api.get('/api/permissions', {
           params: { status: 'approved', count: true }
         });
         
-        const rejectedResponse = await axios.get('/api/permissions', {
-          headers: { Authorization: `Bearer ${token}` },
+        const rejectedResponse = await api.get('/api/permissions', {
           params: { status: 'rejected', count: true }
         });
         
-        setRecentPermissions(recentResponse.data);
-        setPendingCount(pendingResponse.data.count);
-        setApprovedCount(approvedResponse.data.count);
-        setRejectedCount(rejectedResponse.data.count);
+        if (isMounted) {
+          setRecentPermissions(recentResponse.data);
+          setPendingCount(pendingResponse.data.count);
+          setApprovedCount(approvedResponse.data.count);
+          setRejectedCount(rejectedResponse.data.count);
+        }
       } catch (err) {
-        console.error('Error fetching dashboard data:', err);
-        setError('Gagal memuat data dashboard');
+        if (isMounted) {
+          console.error('Error fetching dashboard data:', err);
+          setError('Gagal memuat data dashboard');
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     const fetchQuotaData = async () => {
       try {
-        setQuotaLoading(true);
-        const token = localStorage.getItem('token');
+        if (isMounted) {
+          setQuotaLoading(true);
+        }
         
         // Fetch quota data
-        const response = await axios.get('/api/quotas', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const response = await api.get('/api/quotas');
         
-        setQuotas(response.data.quotas);
+        if (isMounted) {
+          setQuotas(response.data.quotas);
+        }
       } catch (err) {
-        console.error('Error fetching quota data:', err);
-        setQuotaError('Gagal memuat data kuota perizinan');
+        if (isMounted) {
+          console.error('Error fetching quota data:', err);
+          setQuotaError('Gagal memuat data kuota perizinan');
+        }
       } finally {
-        setQuotaLoading(false);
+        if (isMounted) {
+          setQuotaLoading(false);
+        }
       }
     };
 
     fetchDashboardData();
     fetchQuotaData();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const getStatusChip = (status) => {

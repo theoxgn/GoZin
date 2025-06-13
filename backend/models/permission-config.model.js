@@ -4,9 +4,9 @@ const { DataTypes } = require('sequelize');
 module.exports = (sequelize) => {
   const PermissionConfig = sequelize.define('PermissionConfig', {
     id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true
     },
     permissionType: {
       type: DataTypes.ENUM('short_leave', 'cuti', 'visit', 'dinas'),

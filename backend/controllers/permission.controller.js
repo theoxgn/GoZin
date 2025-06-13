@@ -210,7 +210,6 @@ exports.getPermissionById = async (req, res) => {
     if (!permission) {
       return res.status(404).json({ message: 'Perijinan tidak ditemukan' });
     }
-    console.log('hehe',req.userRole);
     // Cek apakah user yang mengakses adalah pemilik perijinan atau memiliki role yang sesuai
     if (
       permission.userId !== req.userId && 

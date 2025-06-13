@@ -73,10 +73,10 @@ module.exports = (sequelize) => {
     },
     // Approval fields
     approvalId: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: true,
       references: {
-        model: 'users',
+        model: 'Users',
         key: 'id'
       }
     },
@@ -90,10 +90,10 @@ module.exports = (sequelize) => {
     },
     // HRD fields
     hrdId: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: true,
       references: {
-        model: 'users',
+        model: 'Users',
         key: 'id'
       }
     },

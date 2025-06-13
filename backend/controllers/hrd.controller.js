@@ -1,6 +1,5 @@
 const { Permission, User } = require('../models');
 const { Op, Sequelize } = require('sequelize');
-const sequelize = require('sequelize');
 const notificationService = require('../services/notification.service');
 
 /**
@@ -146,7 +145,7 @@ exports.rejectPermission = async (req, res) => {
         },
         {
           model: User,
-          as: 'approver',
+          as: 'approval',
           attributes: ['id', 'name', 'email']
         }
       ]
