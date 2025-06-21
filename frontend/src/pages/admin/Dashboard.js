@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../services/api';
 import {
   Box,
   Button,
@@ -53,39 +53,31 @@ function AdminDashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const token = localStorage.getItem('token');
-        
         // Fetch recent permissions
-        const recentResponse = await axios.get('/api/permissions', {
-          headers: { Authorization: `Bearer ${token}` },
+        const recentResponse = await api.get('/api/permissions', {
           params: { limit: 5, sort: 'createdAt,desc' }
         });
         
         // Fetch counts by status
-        const pendingResponse = await axios.get('/api/permissions', {
-          headers: { Authorization: `Bearer ${token}` },
+        const pendingResponse = await api.get('/api/permissions', {
           params: { status: 'pending', count: true }
         });
         
-        const approvedResponse = await axios.get('/api/permissions', {
-          headers: { Authorization: `Bearer ${token}` },
+        const approvedResponse = await api.get('/api/permissions', {
           params: { status: 'approved', count: true }
         });
         
-        const rejectedResponse = await axios.get('/api/permissions', {
-          headers: { Authorization: `Bearer ${token}` },
+        const rejectedResponse = await api.get('/api/permissions', {
           params: { status: 'rejected', count: true }
         });
         
         // Fetch user count
-        const userResponse = await axios.get('/api/users', {
-          headers: { Authorization: `Bearer ${token}` },
+        const userResponse = await api.get('/api/users', {
           params: { count: true }
         });
         
         // Fetch permission type count
-        const typeResponse = await axios.get('/api/admin/permission-configs', {
-          headers: { Authorization: `Bearer ${token}` },
+        const typeResponse = await api.get('/api/admin/permission-configs', {
           params: { count: true }
         });
         

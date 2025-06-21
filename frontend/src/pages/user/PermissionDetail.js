@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../services/api';
 import {
   Box,
   Button,
@@ -61,11 +61,8 @@ function PermissionDetail() {
   const fetchPermissionDetail = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
       console.log('Fetching permission with id:', id);
-      const response = await axios.get(`/api/permissions/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get(`/api/permissions/${id}`);
       console.log('API Response:', response.data);
       if (response.data && response.data.permission) {
         console.log('Setting permission data:', response.data.permission);
@@ -91,10 +88,7 @@ function PermissionDetail() {
     try {
       setCancelLoading(true);
       setCancelError('');
-      const token = localStorage.getItem('token');
-      await axios.post(`/api/permissions/${id}/cancel`, { cancelReason }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.post(`/api/permissions/${id}/cancel`, { cancelReason });
       setCancelDialogOpen(false);
       // Refresh data
       fetchPermissionDetail();

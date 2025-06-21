@@ -4,7 +4,7 @@ const hrdController = require('../controllers/hrd.controller');
 const { verifyToken, isHRD } = require('../middleware/auth.middleware');
 
 // Route untuk mendapatkan daftar perijinan yang sudah disetujui oleh approval
-router.get('/pending', verifyToken, hrdController.getApprovedByApprovalPermissions);
+router.get('/pending', verifyToken, isHRD, hrdController.getApprovedByApprovalPermissions);
 
 // Route untuk menyetujui perijinan
 router.put('/approve/:id', verifyToken, isHRD, hrdController.approvePermission);

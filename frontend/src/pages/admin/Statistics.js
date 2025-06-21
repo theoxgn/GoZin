@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 import {
   Box,
   Card,
@@ -62,11 +62,7 @@ function Statistics() {
   const fetchStatistics = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      
-      const response = await axios.get('/api/admin/statistics', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get('/api/admin/statistics');
       
       setStats(response.data);
       setError('');

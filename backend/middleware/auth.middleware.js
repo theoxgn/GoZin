@@ -5,6 +5,12 @@ const { User } = require('../models');
  * Middleware untuk memverifikasi token JWT
  */
 const verifyToken = (req, res, next) => {
+  // Validate JWT_SECRET environment variable
+  if (!process.env.JWT_SECRET) {
+    console.error('JWT_SECRET environment variable is required');
+    return res.status(500).json({ message: 'Server configuration error' });
+  }
+
   const authHeader = req.headers.authorization;
   
   if (!authHeader || !authHeader.startsWith('Bearer ')) {

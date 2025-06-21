@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../services/api';
 import {
   Box,
   Button,
@@ -81,7 +81,6 @@ function Permissions() {
   const fetchPermissions = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
       
       const params = {
         page: page + 1,
@@ -95,8 +94,7 @@ function Permissions() {
       if (filters.endDate) params.endDate = filters.endDate.toISOString().split('T')[0];
       if (filters.search) params.search = filters.search;
       
-      const response = await axios.get('/api/users/permissions/me', {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await api.get('/api/permissions', {
         params,
       });
       
@@ -113,10 +111,7 @@ function Permissions() {
 
   const fetchPermissionTypes = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('/api/admin/permission-configs', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get('/api/admin/permission-configs');
       // Pastikan kita mengambil array configs dari respons
       setPermissionTypes(response.data.configs || []);
     } catch (err) {

@@ -19,9 +19,14 @@ const attendanceConfigRoutes = require('./routes/attendance-config.routes');
 const app = express();
 
 // Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -62,6 +67,8 @@ const startServer = async () => {
     });
   } catch (error) {
     console.error('Tidak dapat terhubung ke database:', error);
+    console.error('Server tidak dapat dimulai tanpa koneksi database');
+    process.exit(1);
   }
 };
 

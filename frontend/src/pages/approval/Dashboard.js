@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../services/api';
 import {
   Box,
   Button,
@@ -31,17 +31,13 @@ function ApprovalDashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const token = localStorage.getItem('token');
-        
         // Fetch pending count
-        const countResponse = await axios.get('/api/approvals/pending', {
-          headers: { Authorization: `Bearer ${token}` },
+        const countResponse = await api.get('/api/approvals/pending', {
           params: { count: true }
         });
         
         // Fetch recent pending permissions
-        const recentResponse = await axios.get('/api/approvals/pending', {
-          headers: { Authorization: `Bearer ${token}` },
+        const recentResponse = await api.get('/api/approvals/pending', {
           params: { limit: 5, sort: 'createdAt,desc' }
         });
         

@@ -314,7 +314,7 @@ function PayrollManagement() {
     setError('');
 
     try {
-      const response = await api.post('http://localhost:3001/api/payroll/calculate', {
+      const response = await api.post('/api/payroll/calculate', {
         userId: selectedUserForCalculation.id,
         month: parseInt(calculateMonth),
         year: parseInt(calculateYear),
@@ -344,7 +344,7 @@ function PayrollManagement() {
     
     setProcessLoading(true);
     try {
-      await api.put(`http://localhost:3001/api/payroll/process/${selectedPayrollId}`, {});
+      await api.put(`/api/payroll/process/${selectedPayrollId}`, {});
       
       setProcessDialogOpen(false);
       alert('Gaji berhasil diproses');
@@ -363,7 +363,7 @@ function PayrollManagement() {
     
     setPayLoading(true);
     try {
-      await api.put(`http://localhost:3001/api/payroll/pay/${selectedPayrollId}`, {
+      await api.put(`/api/payroll/pay/${selectedPayrollId}`, {
         paymentDate: paymentDate.toISOString(),
         notes: paymentNotes,
       });

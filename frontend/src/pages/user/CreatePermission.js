@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../services/api';
 import {
   Box,
   Button,
@@ -77,11 +77,8 @@ function CreatePermission() {
   const fetchPermissionTypes = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      console.log('Fetching permission types with token:', token);
-      const response = await axios.get('/api/admin/permission-configs', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      console.log('Fetching permission types...');
+      const response = await api.get('/api/admin/permission-configs');
       console.log('Permission types response:', response.data);
       setPermissionTypes(response.data.configs || response.data);
     } catch (err) {
@@ -187,9 +184,7 @@ function CreatePermission() {
         permissionData.endTime = format(formData.endTime, 'HH:mm');
       }
       
-      await axios.post('/api/permissions', permissionData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.post('/api/permissions', permissionData);
       
       setSuccess(true);
       

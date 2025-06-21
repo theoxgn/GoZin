@@ -1,5 +1,4 @@
 const { Notification, User } = require('../models');
-const notificationController = require('../controllers/notification.controller');
 
 /**
  * Service untuk membuat notifikasi saat status perizinan berubah
@@ -47,18 +46,18 @@ exports.createPermissionStatusNotification = async (permission, oldStatus, newSt
 
     // Buat notifikasi untuk user
     try {
-      const notification = await notificationController.createNotification({
+      const notification = await Notification.create({
         userId: permission.userId,
         permissionId: permission.id,
         title,
         message,
         type
       });
-      console.log('Notification created:', notification);
+      console.log('Notification created:', notification.id);
 
       return notification;
     } catch (err) {
-      console.error('Error calling notificationController.createNotification:', err);
+      console.error('Error creating notification:', err);
       return null;
     }
   } catch (error) {
@@ -85,18 +84,18 @@ exports.createNewPermissionNotification = async (permission) => {
 
     // Buat notifikasi untuk user
     try {
-      const notification = await notificationController.createNotification({
+      const notification = await Notification.create({
         userId: permission.userId,
         permissionId: permission.id,
         title,
         message,
         type
       });
-      console.log('New permission notification created:', notification);
+      console.log('New permission notification created:', notification.id);
 
       return notification;
     } catch (err) {
-      console.error('Error calling notificationController.createNotification:', err);
+      console.error('Error creating notification:', err);
       return null;
     }
   } catch (error) {

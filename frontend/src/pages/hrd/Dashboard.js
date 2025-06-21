@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../services/api';
 import {
   Box,
   Button,
@@ -39,13 +39,10 @@ function HRDDashboard() {
 
   const fetchDashboardData = async () => {
     setLoading(true);
-    const token = localStorage.getItem('token');
 
     // Fetch stats
     try {
-      const statsResponse = await axios.get('/api/hrd/stats', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const statsResponse = await api.get('/api/hrd/stats');
       setStats(statsResponse.data.stats);
       setStatsError('');
     } catch (error) {
@@ -55,8 +52,7 @@ function HRDDashboard() {
 
     // Fetch recent pending permissions
     try {
-      const permissionsResponse = await axios.get('/api/hrd/pending', {
-        headers: { Authorization: `Bearer ${token}` },
+      const permissionsResponse = await api.get('/api/hrd/pending', {
         params: { limit: 5, page: 1 },
       });
       setRecentPermissions(permissionsResponse.data.permissions || permissionsResponse.data);

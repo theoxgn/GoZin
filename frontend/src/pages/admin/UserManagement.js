@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 import {
   Box,
   Button,
@@ -70,10 +70,7 @@ function UserManagement() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      
-      const response = await axios.get('/api/admin/users', {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await api.get('/api/admin/users', {
         params: {
           page: page + 1, // API uses 1-based indexing
           limit: rowsPerPage,
@@ -208,9 +205,7 @@ function UserManagement() {
     
     try {
       setProcessing(true);
-      const token = localStorage.getItem('token');
-      
-      await axios.post(
+      await api.post(
         '/api/admin/users',
         {
           name: currentUser.name,
@@ -219,8 +214,7 @@ function UserManagement() {
           position: currentUser.position,
           role: currentUser.role,
           password: currentUser.password,
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
+        }
       );
       
       // Refresh the list
@@ -249,9 +243,7 @@ function UserManagement() {
     
     try {
       setProcessing(true);
-      const token = localStorage.getItem('token');
-      
-      await axios.put(
+      await api.put(
         `/api/admin/users/${currentUser.id}`,
         {
           name: currentUser.name,
@@ -259,8 +251,7 @@ function UserManagement() {
           department: currentUser.department,
           position: currentUser.position,
           role: currentUser.role,
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
+        }
       );
       
       // Refresh the list
@@ -287,11 +278,7 @@ function UserManagement() {
   const handleDeleteUser = async () => {
     try {
       setProcessing(true);
-      const token = localStorage.getItem('token');
-      
-      await axios.delete(`/api/admin/users/${currentUser.id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.delete(`/api/admin/users/${currentUser.id}`);
       
       // Refresh the list
       fetchUsers();
@@ -309,12 +296,9 @@ function UserManagement() {
     
     try {
       setProcessing(true);
-      const token = localStorage.getItem('token');
-      
-      await axios.put(
+      await api.put(
         `/api/admin/users/${currentUser.id}/reset-password`,
-        { password: currentUser.password },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { password: currentUser.password }
       );
       
       closeDialog();
@@ -328,12 +312,9 @@ function UserManagement() {
 
   const handleToggleActive = async (userId, isActive) => {
     try {
-      const token = localStorage.getItem('token');
-      
-      await axios.put(
+      await api.put(
         `/api/admin/users/${userId}/${isActive ? 'deactivate' : 'activate'}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        {}
       );
       
       // Refresh the list

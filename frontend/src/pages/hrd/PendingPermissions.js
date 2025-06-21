@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../services/api';
 import {
   Box,
   Button,
@@ -69,8 +69,6 @@ function PendingPermissions() {
   const fetchPendingPermissions = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      
       const params = {
         page: page + 1, // API uses 1-based indexing
         limit: rowsPerPage,
@@ -81,8 +79,7 @@ function PendingPermissions() {
       if (filters.startDate) params.startDate = filters.startDate.toISOString().split('T')[0];
       if (filters.endDate) params.endDate = filters.endDate.toISOString().split('T')[0];
       
-      const response = await axios.get('/api/hrd/pending', {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await api.get('/api/hrd/pending', {
         params,
       });
       
@@ -169,12 +166,9 @@ function PendingPermissions() {
   const handleApprove = async () => {
     try {
       setProcessing(true);
-      const token = localStorage.getItem('token');
-      
-      await axios.put(
+      await api.put(
         `/api/hrd/approve/${actionDialog.permissionId}`,
-        { note: actionDialog.note },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { note: actionDialog.note }
       );
       
       // Refresh the list
@@ -196,15 +190,12 @@ function PendingPermissions() {
 
     try {
       setProcessing(true);
-      const token = localStorage.getItem('token');
-      
-      await axios.put(
+      await api.put(
         `/api/hrd/reject/${actionDialog.permissionId}`,
         { 
           note: actionDialog.note,
           rejectionReason: actionDialog.reason 
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
+        }
       );
       
       // Refresh the list

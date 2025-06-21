@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 import {
   Box,
   Button,
@@ -56,10 +56,7 @@ function PermissionConfig() {
   const fetchPermissionConfigs = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await axios.get('/api/admin/permission-configs', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get('/api/admin/permission-configs');
       
       setConfigs(response.data);
       setError('');
@@ -150,12 +147,9 @@ function PermissionConfig() {
     
     try {
       setProcessing(true);
-      const token = localStorage.getItem('token');
-      
-      await axios.post(
+      await api.post(
         '/api/admin/permission-configs',
-        currentConfig,
-        { headers: { Authorization: `Bearer ${token}` } }
+        currentConfig
       );
       
       // Refresh the list
@@ -174,12 +168,9 @@ function PermissionConfig() {
     
     try {
       setProcessing(true);
-      const token = localStorage.getItem('token');
-      
-      await axios.put(
+      await api.put(
         `/api/admin/permission-configs/${currentConfig.id}`,
-        currentConfig,
-        { headers: { Authorization: `Bearer ${token}` } }
+        currentConfig
       );
       
       // Refresh the list
@@ -196,11 +187,7 @@ function PermissionConfig() {
   const handleDeleteConfig = async () => {
     try {
       setProcessing(true);
-      const token = localStorage.getItem('token');
-      
-      await axios.delete(`/api/admin/permission-configs/${currentConfig.id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.delete(`/api/admin/permission-configs/${currentConfig.id}`);
       
       // Refresh the list
       fetchPermissionConfigs();

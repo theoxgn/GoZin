@@ -9,6 +9,11 @@ exports.getApprovedByApprovalPermissions = async (req, res) => {
   try {
     const { type, startDate, endDate, limit, page } = req.query;
     
+    // Validate and set pagination parameters
+    const limitNum = parseInt(limit) || 10;
+    const pageNum = parseInt(page) || 1;
+    const offset = (pageNum - 1) * limitNum;
+    
     // Buat kondisi filter
     const whereCondition = { status: 'approved_by_approval' };
     
@@ -31,8 +36,6 @@ exports.getApprovedByApprovalPermissions = async (req, res) => {
         [Op.lte]: new Date(endDate)
       };
     }
-    
-    const offset = (page - 1) * limit; // Calculate offset for pagination
 
     const permissions = await Permission.findAll({
       where: whereCondition,
@@ -44,8 +47,8 @@ exports.getApprovedByApprovalPermissions = async (req, res) => {
         }
       ],
       order: [['approvalDate', 'ASC']],
-      limit: limit ? parseInt(limit) : undefined, // Apply limit for pagination
-      offset: offset || undefined, // Apply offset for pagination
+      limit: limitNum,
+      offset: offset
     });
     
     res.status(200).json({
