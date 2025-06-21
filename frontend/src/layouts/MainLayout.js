@@ -123,12 +123,28 @@ function MainLayout() {
 
   // Helper function to check if a menu item is active
   const isMenuItemActive = (path) => {
-    if (path === '/' && location.pathname === '/') {
+    const currentPath = location.pathname;
+    
+    // Debug log (remove in production)
+    // console.log('Checking path:', path, 'against current:', currentPath);
+    
+    // Special case untuk root/dashboard
+    if (path === '/') {
+      return currentPath === '/';
+    }
+    
+    // Exact match - paling prioritas
+    if (currentPath === path) {
       return true;
     }
-    if (path !== '/' && location.pathname.startsWith(path)) {
+    
+    // Sub-path match - hanya untuk parent paths, bukan sibling paths
+    // Contoh: "/permissions" active untuk "/permissions/create", "/permissions/123"
+    // Tapi "/permissions/create" TIDAK active untuk "/permissions"
+    if (currentPath.startsWith(path + '/')) {
       return true;
     }
+    
     return false;
   };
 
